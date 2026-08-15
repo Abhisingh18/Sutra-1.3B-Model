@@ -1690,3 +1690,54 @@ td.win {
   font-weight: 600;
   text-transform: uppercase;
 }
+
+/* ---- sidebar account ---------------------------------------------------- */
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.account img {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.who2 {
+  flex: 1;
+  min-width: 0;
+  color: var(--fg-soft);
+  font-size: 12.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account button,
+.account a,
+.signin {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  text-decoration: none;
+}
+
+.account button:hover,
+.account a:hover,
+.signin:hover {
+  color: var(--accent-deep);
+}
+
+.signin {
+  line-height: 1.4;
+}

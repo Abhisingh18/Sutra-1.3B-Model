@@ -65,7 +65,8 @@ def generate(model, mcfg, tok, device, question, max_new_tokens=120,
     with torch.no_grad():
         out = model.generate(
             ids, max_new_tokens=max_new_tokens, temperature=temperature,
-            top_k=40, top_p=0.9, min_new_tokens=24, repetition_penalty=1.15,
+            top_k=40, top_p=0.9, min_new_tokens=24, repetition_penalty=1.25,
+            no_repeat_ngram_size=4,
             eos_id=end_id)
     return tok.decode(out[0, ids.shape[1]:].tolist()).split(END_TURN)[0].strip()
 

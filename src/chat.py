@@ -35,7 +35,9 @@ def main():
     # The model answers "what is ai" with "Artificial Intelligence" and stops.
     # Blocking <|end_turn|> for the first 32 tokens forces it to elaborate.
     ap.add_argument("--min-new-tokens", type=int, default=32)
-    ap.add_argument("--repetition-penalty", type=float, default=1.15)
+    ap.add_argument("--repetition-penalty", type=float, default=1.25)
+    # Blocks verbatim phrase loops the per-token penalty cannot catch.
+    ap.add_argument("--no-repeat-ngram", type=int, default=4)
     # Turns of history to carry. 0 by default: at this scale the model copies
     # its own previous answer verbatim rather than answering the new question,
     # and the repetition penalty cannot see prompt tokens to stop it.
@@ -115,6 +117,7 @@ def main():
                 top_p=args.top_p,
                 min_new_tokens=0 if args.raw else args.min_new_tokens,
                 repetition_penalty=args.repetition_penalty,
+                no_repeat_ngram_size=args.no_repeat_ngram,
                 eos_id=end_turn_id if not args.raw else eos_id,
             )
 

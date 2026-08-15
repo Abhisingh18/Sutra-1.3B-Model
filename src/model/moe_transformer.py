@@ -222,7 +222,8 @@ class AbhiMoE(nn.Module):
     @torch.no_grad()
     def generate(self, input_ids, max_new_tokens=256, temperature=0.8,
                  top_k=50, top_p=0.95, eos_id=None,
-                 min_new_tokens=0, repetition_penalty=1.0):
+                 min_new_tokens=0, repetition_penalty=1.0,
+                 no_repeat_ngram_size=0):
         """Sample a continuation.
 
         `min_new_tokens` exists because this model ends turns far too early:
@@ -233,6 +234,12 @@ class AbhiMoE(nn.Module):
         `repetition_penalty` is the other half of that trade: once forced to
         keep going, a model this small falls into loops, so tokens it has
         already emitted get their scores pushed down.
+
+        `no_repeat_ngram_size` catches what the penalty cannot. Asked "what is
+        ai" this model emitted "A computer is a system of computers." five times
+        in a row: every token in that sentence is common enough that a per-token
+        penalty barely moves it, but the n-gram never repeats if the whole
+        continuation is blocked.
         """
         self.eval()
         caches = [(None, None)] * self.cfg.n_layers
@@ -254,6 +261,17 @@ class AbhiMoE(nn.Module):
                         # the "penalty" would make them more likely instead.
                         logits[b, seen] = torch.where(
                             s > 0, s / repetition_penalty, s * repetition_penalty)
+
+            n = no_repeat_ngram_size
+            if n > 1 and input_ids.shape[1] >= n:
+                for b in range(logits.shape[0]):
+                    seq = input_ids[b].tolist()
+                    prefix = tuple(seq[-(n - 1):])
+                    # Any token that already followed this exact prefix would
+                    # complete a repeated n-gram, so rule it out.
+                    for j in range(len(seq) - n + 1):
+                        if tuple(seq[j:j + n - 1]) == prefix:
+                            logits[b, seq[j + n - 1]] = float("-inf")
 
             # Block the stop token until the reply has some substance.
             if eos_id is not None and i < min_new_tokens:

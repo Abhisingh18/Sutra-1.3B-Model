@@ -94,7 +94,16 @@ def generate_tokens(req: ChatRequest):
             if produced:
                 seen = torch.tensor(produced, device=device).unique()
                 s = lg[0, seen]
-                lg[0, seen] = torch.where(s > 0, s / 1.15, s * 1.15)
+                lg[0, seen] = torch.where(s > 0, s / 1.25, s * 1.25)
+            # Block any 4-gram that already appeared. Without this the model
+            # loops: "A computer is a system of computers." five times over.
+            if len(produced) >= 3:
+                seq = ids[0].tolist() + produced
+                pre = tuple(seq[-3:])
+                for j in range(len(seq) - 3):
+                    if tuple(seq[j:j + 3]) == pre:
+                        lg[0, seq[j + 3]] = float("-inf")
+
             if i < 24:
                 lg[:, end_id] = float("-inf")
 

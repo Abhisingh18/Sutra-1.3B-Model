@@ -33,6 +33,11 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [online, setOnline] = useState<boolean | null>(null);
+  // On by default: without retrieved context the model answers confidently
+  // from nothing, and at 0.28B active parameters those answers are usually
+  // wrong. The toggle stays visible so the difference is easy to see.
+  const [rag, setRag] = useState(true);
+  const [hasRag, setHasRag] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
@@ -42,7 +47,10 @@ export default function Home() {
   useEffect(() => {
     const ping = () =>
       fetch(`${API}/health`)
-        .then((r) => setOnline(r.ok))
+        .then(async (r) => {
+          setOnline(r.ok);
+          if (r.ok) setHasRag(Boolean((await r.json()).rag));
+        })
         .catch(() => setOnline(false));
     ping();
     const t = setInterval(ping, 30000);
@@ -71,7 +79,12 @@ export default function Home() {
       const res = await fetch(`${API}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, max_tokens: 200, temperature: 0.5 }),
+        body: JSON.stringify({
+          message: text,
+          max_tokens: 200,
+          temperature: 0.5,
+          rag: rag && hasRag,
+        }),
       });
       if (!res.body) throw new Error("no stream");
 
@@ -199,6 +212,15 @@ export default function Home() {
             {busy ? <span className="spin" /> : "↑"}
           </button>
         </form>
+        {hasRag && (
+          <button
+            className={`ragtoggle ${rag ? "on" : ""}`}
+            onClick={() => setRag(!rag)}
+            title="Look the answer up in Wikipedia before replying"
+          >
+            <span className="tick">{rag ? "✓" : ""}</span> Retrieval
+          </button>
+        )}
         <p className="disclaimer">
           Trained on 18B tokens — about 500x less than comparable 1B models. It
           writes fluently but does not reliably know facts.

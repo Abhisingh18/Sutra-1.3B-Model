@@ -860,9 +860,13 @@ h1,
   position: sticky;
   top: 0;
   z-index: 30;
-  padding: 14px 24px 0;
+  padding: 12px 24px 0;
 }
 
+/* No fill, no border, no shadow. The bar sits directly on the wash, so a white
+   capsule behind it was a second surface competing with the gradient it was
+   supposed to float on. A blur alone keeps the links legible when content
+   scrolls under them. */
 .lnav {
   display: grid;
   grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
@@ -870,12 +874,12 @@ h1,
   gap: 28px;
   max-width: 1160px;
   margin: 0 auto;
-  padding: 10px 10px 10px 20px;
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(16px) saturate(150%);
-  border: 1px solid var(--line);
+  padding: 10px 10px 10px 4px;
+  background: transparent;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 0;
   border-radius: 18px;
-  box-shadow: 0 4px 20px rgba(15, 23, 41, 0.07);
 }
 
 .logo {
@@ -928,7 +932,7 @@ h1,
 
 .navlinks a {
   position: relative;
-  color: var(--fg-soft);
+  color: var(--fg);
   font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.06em;

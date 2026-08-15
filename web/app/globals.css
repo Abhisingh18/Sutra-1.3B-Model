@@ -866,17 +866,21 @@ h1,
 /* The sticky wrapper is transparent and holds no styling of its own; the bar
    inside it is the rounded capsule. Splitting the two is what lets the corners
    stay round while the element still pins to the top of the viewport. */
+/* Not sticky any more. With no fill behind it, a bar that follows the scroll
+   would sit over whatever passes beneath and become unreadable. */
 .topbar {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 30;
-  padding: 12px 24px 0;
+  padding: 14px 24px 0;
 }
 
 /* No fill, no border, no shadow. The bar sits directly on the wash, so a white
    capsule behind it was a second surface competing with the gradient it was
    supposed to float on. A blur alone keeps the links legible when content
    scrolls under them. */
+/* Nothing behind it at all -- no fill, no border, no blur. A backdrop-filter
+   was leaving a faintly lighter rectangle wherever it overlapped the wash,
+   because blurring a smooth gradient still shifts it enough to show an edge. */
 .lnav {
   display: grid;
   grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
@@ -885,11 +889,7 @@ h1,
   max-width: 1160px;
   margin: 0 auto;
   padding: 10px 10px 10px 4px;
-  background: transparent;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 0;
-  border-radius: 18px;
+  background: none;
 }
 
 .logo {

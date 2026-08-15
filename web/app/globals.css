@@ -1,43 +1,41 @@
-/* Sunrise: saturated orange at the crown falling through peach into lavender,
- * landing on cream. Ink and indigo carry the type.
+/* Ink and indigo on white, with a sky wash at the crown.
  *
- * The base is cream rather than white on purpose -- a warm ground is what lets
- * the gradient end without a visible seam, which pure white does not.
+ * One family of blues carries everything: a deep indigo for anything the
+ * reader acts on, a lighter sky for washes and fills. Warmth appears once,
+ * as an amber used only to mark the best column of the results table, where
+ * a second blue would be invisible against the first.
  */
 :root {
   color-scheme: light;
 
-  --ink: #1a1614;
-  --fg: #1a1614;
-  --fg-soft: #4a423d;
-  --muted: #857b74;
-  --cream: #ffffff;
+  --ink: #0f1729;
+  --fg: #0f1729;
+  --fg-soft: #414d68;
+  --muted: #7b869e;
+
   --bg: #ffffff;
   --surface: #ffffff;
-  --raised: #f7f8fa;
+  --raised: #f6f8fc;
 
-  --accent: #ff7a1a;
-  --accent-hi: #ff9d4a;
-  --accent-deep: #f45d00;
-  --accent-soft: #ffe6cf;
+  --accent: #2549c7;
+  --accent-hi: #4a71ea;
+  --accent-deep: #1a327f;
+  --accent-soft: #eef2fe;
 
-  --blue: #3730a3;
-  --blue-hi: #5b52c9;
-  --blue-soft: #e5e8fb;
-  --lav: #c7cdf5;
+  --sky: #a9c4f5;
+  --sky-soft: #e3ecfd;
+  --amber: #b45309;
+  --amber-soft: #fef4e7;
 
-  --pill-dark: #241d1a;
-  --line: rgba(26, 22, 20, 0.12);
-  --line-soft: rgba(26, 22, 20, 0.07);
+  --pill-dark: #0f1729;
+  --line: rgba(15, 23, 41, 0.1);
+  --line-soft: rgba(15, 23, 41, 0.06);
 
-  --shadow: 0 1px 2px rgba(26, 22, 20, 0.04), 0 10px 30px rgba(244, 93, 0, 0.07);
-  --radius: 24px;
-  --aside: 260px;
+  --shadow: 0 1px 2px rgba(15, 23, 41, 0.04), 0 10px 30px rgba(15, 23, 41, 0.06);
+  --radius: 20px;
+  --aside: 264px;
 }
 
-/* No dark scheme. The palette is a sunrise on white; there is no honest
-   dark counterpart to it, and a machine-translated one looked like a
-   different product. */
 * {
   box-sizing: border-box;
 }
@@ -812,13 +810,14 @@ main.centered {
   padding-bottom: 84px;
   /* A tint, not a field. The page reads white first and picks up warmth
      second. */
-  background: radial-gradient(
-    120% 66% at 50% -14%,
-    color-mix(in srgb, var(--accent) 30%, transparent) 0%,
-    color-mix(in srgb, var(--accent) 16%, transparent) 26%,
-    color-mix(in srgb, var(--lav) 22%, transparent) 54%,
-    var(--bg) 84%
-  );
+  background:
+    radial-gradient(
+      120% 62% at 50% -16%,
+      color-mix(in srgb, var(--accent-hi) 28%, transparent) 0%,
+      color-mix(in srgb, var(--sky) 34%, transparent) 32%,
+      transparent 68%
+    ),
+    linear-gradient(180deg, var(--sky-soft) 0%, transparent 58%);
 }
 
 .lnav {
@@ -898,11 +897,11 @@ main.centered {
 
 .btn-dark {
   background: var(--pill-dark);
-  color: var(--cream) !important;
+  color: #fff !important;
 }
 
 .btn-dark:hover {
-  box-shadow: 0 10px 24px rgba(36, 29, 26, 0.28);
+  box-shadow: 0 10px 24px rgba(15, 23, 41, 0.28);
 }
 
 .btn-ghost {
@@ -939,7 +938,7 @@ main.centered {
 }
 
 .eyebrow {
-  color: var(--blue);
+  color: var(--accent);
   font-weight: 600;
   font-size: 14.5px;
   margin-bottom: 26px;
@@ -978,7 +977,7 @@ main.centered {
 /* ---- stat strip --------------------------------------------------------- */
 
 .trust {
-  margin-top: 96px;
+  margin-top: 84px;
   text-align: center;
 }
 
@@ -992,33 +991,44 @@ main.centered {
   margin-bottom: 32px;
 }
 
+/* A bordered grid rather than a loose row. Four numbers spaced by flex gaps
+   read as scattered; ruled cells read as a specification. */
 .logos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 34px 58px;
-  align-items: baseline;
-  justify-content: center;
-  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 0 auto;
+  max-width: 940px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.logos div {
+  padding: 26px 22px;
+  text-align: left;
+  border-right: 1px solid var(--line-soft);
+}
+
+.logos div:last-child {
+  border-right: 0;
 }
 
 .logos dt {
   font-family: var(--font-display), Georgia, serif;
   font-weight: 600;
-  font-size: 34px;
+  font-size: 33px;
   line-height: 1;
-  letter-spacing: -0.02em;
-  color: var(--ink);
-}
-
-.logos div:nth-child(2n) dt {
-  color: var(--accent-deep);
+  letter-spacing: -0.025em;
+  color: var(--accent);
 }
 
 .logos dd {
-  margin: 6px 0 0;
+  margin: 9px 0 0;
   color: var(--fg-soft);
-  font-size: 13px;
-  opacity: 0.85;
+  font-size: 12.5px;
+  line-height: 1.45;
 }
 
 /* ---- sections ----------------------------------------------------------- */
@@ -1069,7 +1079,7 @@ main.centered {
 
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 18px 40px rgba(244, 93, 0, 0.1);
+  box-shadow: 0 18px 40px rgba(37, 73, 199, 0.1);
 }
 
 /* Each dot takes a different gradient, so three identical cards still read as
@@ -1083,7 +1093,7 @@ main.centered {
 }
 
 .cards .card:nth-child(2) .dot {
-  background: linear-gradient(135deg, var(--lav), var(--blue));
+  background: linear-gradient(135deg, var(--sky), var(--accent));
 }
 
 .cards .card:nth-child(3) .dot {
@@ -1114,7 +1124,7 @@ main.centered {
 }
 
 .can h3 {
-  color: var(--blue);
+  color: var(--accent);
 }
 
 .cant h3 {
@@ -1153,7 +1163,7 @@ td:first-child {
 }
 
 thead th {
-  color: var(--blue);
+  color: var(--accent);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -1204,7 +1214,7 @@ td.win {
   top: 30px;
   bottom: 30px;
   width: 1px;
-  background: linear-gradient(to bottom, var(--accent), var(--blue));
+  background: linear-gradient(to bottom, var(--accent), var(--accent));
 }
 
 .stages li {
@@ -1268,7 +1278,7 @@ td.win {
     120% 140% at 50% 0%,
     var(--accent) 0%,
     var(--accent-deep) 45%,
-    var(--blue) 120%
+    var(--accent) 120%
   );
 }
 
@@ -1352,7 +1362,15 @@ td.win {
   }
 
   .logos {
-    gap: 26px 36px;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .logos div:nth-child(2) {
+    border-right: 0;
+  }
+
+  .logos div:nth-child(-n + 2) {
+    border-bottom: 1px solid var(--line-soft);
   }
 
   .band {
@@ -1390,10 +1408,9 @@ td.win {
   transform: translateX(-50%);
   background: radial-gradient(
     120% 90% at 50% -30%,
-    color-mix(in srgb, var(--accent) 26%, transparent) 0%,
-    color-mix(in srgb, var(--accent) 12%, transparent) 34%,
-    color-mix(in srgb, var(--lav) 16%, transparent) 62%,
-    transparent 86%
+    color-mix(in srgb, var(--accent-hi) 22%, transparent) 0%,
+    color-mix(in srgb, var(--sky) 24%, transparent) 38%,
+    transparent 84%
   );
   pointer-events: none;
 }
@@ -1420,7 +1437,7 @@ td.win {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 26px;
-  box-shadow: 0 10px 40px rgba(244, 93, 0, 0.1);
+  box-shadow: 0 10px 40px rgba(37, 73, 199, 0.1);
   text-align: center;
 }
 
@@ -1464,12 +1481,12 @@ td.win {
 
 .pill.dark {
   background: var(--pill-dark);
-  color: var(--cream) !important;
+  color: #fff !important;
 }
 
 .pill.dark:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(36, 29, 26, 0.28);
+  box-shadow: 0 10px 24px rgba(15, 23, 41, 0.28);
 }
 
 .pill.dark:disabled {
@@ -1504,7 +1521,7 @@ td.win {
 
 .gbtn:hover {
   border-color: var(--accent);
-  box-shadow: 0 8px 20px rgba(244, 93, 0, 0.1);
+  box-shadow: 0 8px 20px rgba(37, 73, 199, 0.1);
 }
 
 .or {
@@ -1718,4 +1735,133 @@ td.win {
 
 .signin {
   line-height: 1.4;
+}
+
+/* ---- structure ---------------------------------------------------------- */
+
+/* Sections were all one length and one rhythm, which made the page read as a
+   list. Alternating the ground gives it a spine. */
+.platform {
+  padding: 104px 0 48px;
+}
+
+.platform + .platform {
+  padding-top: 88px;
+}
+
+#results {
+  position: relative;
+  padding-block: 92px;
+}
+
+#results::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0 50% auto;
+  width: 100vw;
+  height: 100%;
+  transform: translateX(-50%);
+  background: var(--raised);
+  border-block: 1px solid var(--line-soft);
+}
+
+/* Section headings get a small ruled label above them, which is what gives a
+   long page its sense of chapters. */
+.platform > h2::before {
+  content: "";
+  display: block;
+  width: 40px;
+  height: 2px;
+  margin: 0 auto 20px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--sky));
+}
+
+/* Amber appears exactly once on the page: the winning column. A second blue
+   there would be invisible against the first. */
+td.win,
+thead th:last-child {
+  background: var(--amber-soft);
+}
+
+td.win {
+  color: var(--amber);
+}
+
+/* Cards on white need their edge from shadow, not from a heavier border. */
+.card {
+  box-shadow: var(--shadow);
+}
+
+.card:hover {
+  box-shadow: 0 2px 6px rgba(15, 23, 41, 0.05), 0 20px 44px rgba(15, 23, 41, 0.09);
+}
+
+.dot {
+  background: linear-gradient(135deg, var(--accent-hi), var(--accent));
+}
+
+.cards .card:nth-child(2) .dot {
+  background: linear-gradient(135deg, var(--sky), var(--accent-deep));
+}
+
+.cards .card:nth-child(3) .dot {
+  background: linear-gradient(135deg, var(--accent-hi), var(--accent-deep));
+}
+
+/* The ornament was a warm flourish on a warm page; on blue it reads better as
+   a rule alone. */
+.ornament {
+  color: var(--accent);
+  opacity: 0.5;
+  font-size: 18px;
+  letter-spacing: 8px;
+}
+
+.ornament .rule {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--accent) 34%, transparent),
+    transparent
+  );
+}
+
+.eyebrow {
+  letter-spacing: 0.02em;
+}
+
+/* The closing band inherits the same blue family instead of an orange one. */
+.band {
+  background: radial-gradient(
+    120% 150% at 50% 0%,
+    var(--accent-hi) 0%,
+    var(--accent) 42%,
+    var(--accent-deep) 110%
+  );
+}
+
+.band .btn {
+  color: var(--accent-deep) !important;
+}
+
+.logo span {
+  color: var(--accent);
+}
+
+.can h3 {
+  color: var(--accent);
+}
+
+.cant h3 {
+  color: var(--amber);
+}
+
+.num {
+  color: var(--accent);
+}
+
+.stages::before {
+  background: linear-gradient(to bottom, var(--accent), var(--sky));
 }

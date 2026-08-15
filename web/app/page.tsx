@@ -52,7 +52,8 @@ export default function Landing() {
       <header className="hero">
         <nav className="lnav">
           <Link href="/" className="logo">
-            sutra<span>.ai</span>
+            <span className="logomark">स</span>
+            sutra<span className="tld">.ai</span>
           </Link>
           <div className="navlinks">
             <a href="#architecture">Architecture</a>
@@ -71,10 +72,10 @@ export default function Landing() {
         </nav>
 
         <div className="wrap hero-inner">
-          <div className="ornament">
-            ❧ ✦ ❧<span className="rule" />
+          <div className="eyebrow">
+            <span className="pipdot" />
+            1.32B parameters · 18B tokens · trained on 4 GPUs
           </div>
-          <div className="eyebrow">Pretrained · Fine-tuned · Aligned</div>
           <h1>
             Every weight
             <br />
@@ -97,9 +98,42 @@ export default function Landing() {
             </a>
           </div>
 
-          {/* The reference puts a strip of partner logos here. There are none
-              to put, so the same slot carries the four numbers that actually
-              describe the model. */}
+          {/* A fold of pure prose has nothing to look at. This is the shortest
+              honest demonstration of the thing: three commands, and what the
+              model actually replies. */}
+          <div className="demo">
+            <div className="demobar">
+              <i />
+              <i />
+              <i />
+              <span>terminal</span>
+            </div>
+            <pre className="democode">
+              <code>
+                <span className="c-mut">$ </span>
+                <span className="c-cmd">pip install torch tokenizers huggingface_hub</span>
+                {"\n"}
+                <span className="c-mut">$ </span>
+                <span className="c-cmd">
+                  wget huggingface.co/Abhisingh-18/Sutra-1.3B-Chat/…/inference.py
+                </span>
+                {"\n"}
+                <span className="c-mut">$ </span>
+                <span className="c-cmd">python inference.py </span>
+                <span className="c-str">&quot;What is machine learning?&quot;</span>
+                {"\n\n"}
+                <span className="c-dim">
+                  Sutra-1.3B on cpu: 1.32B total, 0.28B active
+                </span>
+                {"\n\n"}
+                Machine learning is a branch of artificial intelligence that
+                deals with the study and prediction of complex data. It involves
+                using algorithms to analyse large amounts of data to make
+                predictions about future outcomes.
+              </code>
+            </pre>
+          </div>
+
           <div className="trust">
             <div className="kicker">Built end to end</div>
             <dl className="logos">

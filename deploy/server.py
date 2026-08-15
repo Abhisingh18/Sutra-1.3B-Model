@@ -21,7 +21,7 @@ import json
 import os
 
 import torch
-from fastapi import FastAPI
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -50,12 +50,26 @@ class ChatRequest(BaseModel):
     max_tokens: int = 512
     temperature: float = 0.5
     rag: bool = False
+    doc_id: str | None = None
 
 
 @app.get("/health")
 def health():
     return {"status": "ok", "model": STATE.get("desc", "not loaded"),
-            "rag": STATE.get("retriever") is not None}
+            "rag": STATE.get("retriever") is not None,
+            "upload": STATE.get("docstore") is not None}
+
+
+@app.post("/upload")
+async def upload(file: UploadFile = File(...)):
+    """Index a document so the next questions can be answered from it."""
+    store = STATE.get("docstore")
+    if store is None:
+        raise HTTPException(503, "upload is not enabled on this server")
+    try:
+        return store.add(file.filename or "document", await file.read())
+    except ValueError as e:
+        raise HTTPException(400, str(e))
 
 
 def generate_tokens(req: ChatRequest):
@@ -69,11 +83,27 @@ def generate_tokens(req: ChatRequest):
                                 STATE["mcfg"], STATE["device"])
     end_id = tok.token_to_id(END_TURN)
 
-    question = req.message
-    if req.rag and STATE.get("retriever") is not None:
-        from src.rag.retrieve import build_prompt
+    from src.rag.retrieve import build_prompt
+
+    question, used = req.message, []
+    if req.doc_id and STATE.get("docstore") is not None:
+        # An uploaded document wins over Wikipedia: the user chose this corpus,
+        # and unlike the wiki index it is guaranteed to cover their question.
+        hits = STATE["docstore"].search(req.doc_id, req.message, k=4)
+        if hits:
+            question = build_prompt(req.message, hits, max_chars=2600)
+            used = hits
+    elif req.rag and STATE.get("retriever") is not None:
         hits = STATE["retriever"].search(req.message, k=3)
         question = build_prompt(req.message, hits)
+        used = hits
+
+    # The model reads the right passage but garbles numbers out of it -- asked
+    # for a 60-day notice period it answered "6 days". Showing the source text
+    # is what makes that failure visible and the answer checkable, instead of
+    # quietly wrong.
+    yield {"sources": [{"score": round(sc, 2), "text": t[:600], "name": n}
+                       for sc, t, n in used[:3]]}
 
     prompt = chat_template(
         [{"role": "system", "content": SYSTEM},
@@ -142,7 +172,8 @@ async def chat(req: ChatRequest):
             chunk = await loop.run_in_executor(None, lambda: next(gen, None))
             if chunk is None:
                 break
-            yield f"data: {json.dumps({'token': chunk})}\n\n"
+            payload = chunk if isinstance(chunk, dict) else {"token": chunk}
+            yield f"data: {json.dumps(payload)}\n\n"
         yield f"data: {json.dumps({'done': True})}\n\n"
 
     return StreamingResponse(stream(), media_type="text/event-stream")
@@ -153,6 +184,8 @@ def main():
     ap.add_argument("--ckpt", default="checkpoints/dpo/dpo_epoch_0.pt")
     ap.add_argument("--tokenizer", default="tokenizer/tokenizer.json")
     ap.add_argument("--rag-index", help="enable retrieval from this index dir")
+    ap.add_argument("--no-upload", action="store_true",
+                    help="disable the /upload endpoint")
     ap.add_argument("--host", default="0.0.0.0")
     ap.add_argument("--port", type=int, default=8000)
     args = ap.parse_args()
@@ -165,12 +198,23 @@ def main():
 
     STATE.update(model=model, mcfg=mcfg, device=device,
                  tok=Tokenizer.from_file(args.tokenizer),
-                 desc=describe(model, mcfg), retriever=None)
+                 desc=describe(model, mcfg), retriever=None, docstore=None)
 
     if args.rag_index:
         from src.rag.retrieve import Retriever
         STATE["retriever"] = Retriever(args.rag_index, device=device)
         print(f"rag: {len(STATE['retriever'].chunks):,} chunks")
+
+    if not args.no_upload:
+        from sentence_transformers import SentenceTransformer
+        from src.rag.docstore import DocStore
+        from src.rag.ingest import EMBED_MODEL
+        # Reuse the wiki retriever's encoder when there is one -- loading a
+        # second copy of the same model wastes memory for nothing.
+        enc = (STATE["retriever"].enc if STATE["retriever"] is not None
+               else SentenceTransformer(EMBED_MODEL, device=device))
+        STATE["docstore"] = DocStore(enc)
+        print("upload: enabled")
 
     print(f"{STATE['desc']} on {device}")
     print(f"listening on http://{args.host}:{args.port}")

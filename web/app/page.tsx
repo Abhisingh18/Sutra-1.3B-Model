@@ -7,7 +7,8 @@ import { useEffect, useRef, useState } from "react";
 // unless you use a named tunnel.
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-type Msg = { role: "user" | "assistant"; text: string };
+type Src = { score: number; text: string; name: string };
+type Msg = { role: "user" | "assistant"; text: string; sources?: Src[] };
 
 const EXAMPLES = [
   {
@@ -39,6 +40,9 @@ export default function Home() {
   // where with no context it at least stayed on topic.
   const [rag, setRag] = useState(false);
   const [hasRag, setHasRag] = useState(false);
+  const [canUpload, setCanUpload] = useState(false);
+  const [doc, setDoc] = useState<{ id: string; name: string; chunks: number } | null>(null);
+  const [uploading, setUploading] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
@@ -50,7 +54,11 @@ export default function Home() {
       fetch(`${API}/health`)
         .then(async (r) => {
           setOnline(r.ok);
-          if (r.ok) setHasRag(Boolean((await r.json()).rag));
+          if (r.ok) {
+            const h = await r.json();
+            setHasRag(Boolean(h.rag));
+            setCanUpload(Boolean(h.upload));
+          }
         })
         .catch(() => setOnline(false));
     ping();
@@ -85,6 +93,7 @@ export default function Home() {
           max_tokens: 512,
           temperature: 0.5,
           rag: rag && hasRag,
+          doc_id: doc?.id ?? null,
         }),
       });
       if (!res.body) throw new Error("no stream");
@@ -104,6 +113,13 @@ export default function Home() {
         for (const f of frames) {
           if (!f.startsWith("data: ")) continue;
           const d = JSON.parse(f.slice(6));
+          if (d.sources?.length) {
+            setMsgs((m) => {
+              const c = [...m];
+              c[c.length - 1] = { ...c[c.length - 1], sources: d.sources };
+              return c;
+            });
+          }
           if (d.token) {
             setMsgs((m) => {
               const c = [...m];
@@ -127,6 +143,32 @@ export default function Home() {
       });
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function upload(f: File) {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", f);
+      const r = await fetch(`${API}/upload`, { method: "POST", body: fd });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.detail || "upload failed");
+      setDoc({ id: d.doc_id, name: d.name, chunks: d.chunks });
+      setMsgs((m) => [
+        ...m,
+        {
+          role: "assistant",
+          text: `Indexed ${d.name} — ${d.chunks} passages. Ask me about it; I will answer from the document rather than from memory.`,
+        },
+      ]);
+    } catch (e) {
+      setMsgs((m) => [
+        ...m,
+        { role: "assistant", text: `Could not read that file. ${(e as Error).message}` },
+      ]);
+    } finally {
+      setUploading(false);
     }
   }
 
@@ -178,6 +220,22 @@ export default function Home() {
                 <div className="body">
                   {m.text || <span className="dots"><i /><i /><i /></span>}
                 </div>
+                {m.sources?.length ? (
+                  <details className="sources">
+                    <summary>
+                      Answered from {m.sources.length} passage
+                      {m.sources.length > 1 ? "s" : ""} — check it
+                    </summary>
+                    {m.sources.map((s, j) => (
+                      <blockquote key={j}>
+                        <cite>
+                          {s.name} · {s.score}
+                        </cite>
+                        {s.text}
+                      </blockquote>
+                    ))}
+                  </details>
+                ) : null}
               </div>
             ))}
             <div ref={endRef} />
@@ -213,15 +271,39 @@ export default function Home() {
             {busy ? <span className="spin" /> : "↑"}
           </button>
         </form>
-        {hasRag && (
-          <button
-            className={`ragtoggle ${rag ? "on" : ""}`}
-            onClick={() => setRag(!rag)}
-            title="Look the answer up in Wikipedia before replying"
-          >
-            <span className="tick">{rag ? "✓" : ""}</span> Retrieval
-          </button>
-        )}
+        <div className="tools">
+          {canUpload && (
+            <label className="tool">
+              <input
+                type="file"
+                accept=".txt,.md,.pdf"
+                hidden
+                disabled={uploading}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) upload(f);
+                  e.target.value = "";
+                }}
+              />
+              {uploading ? "Indexing…" : "＋ Upload a document"}
+            </label>
+          )}
+          {doc && (
+            <span className="chip">
+              {doc.name} · {doc.chunks} passages
+              <button onClick={() => setDoc(null)} aria-label="Remove">×</button>
+            </span>
+          )}
+          {hasRag && !doc && (
+            <button
+              className={`tool ${rag ? "on" : ""}`}
+              onClick={() => setRag(!rag)}
+              title="Look the answer up in Wikipedia before replying"
+            >
+              {rag ? "✓ " : ""}Wikipedia
+            </button>
+          )}
+        </div>
         <p className="disclaimer">
           Trained on 18B tokens — about 500x less than comparable 1B models. It
           writes fluently but does not reliably know facts.

@@ -1,427 +1,251 @@
-"use client";
+import Link from "next/link";
 
-import { useEffect, useRef, useState } from "react";
+/* Landing page. Deliberately a server component with no client JavaScript --
+ * it is static content, and shipping a React bundle to render prose would slow
+ * the first thing anyone sees for no gain. The chat app lives at /chat.
+ *
+ * The numbers below are measured, not marketing: they come from
+ * src/eval.py --compare over 500 examples per task. The WinoGrande row sits at
+ * chance and is shown anyway, because a benchmark table that only lists wins is
+ * not evidence of anything.
+ */
 
-import { Markdown } from "./markdown";
-
-// Set in Vercel: Settings -> Environment Variables. This is the cloudflared
-// URL printed by deploy/server.py's tunnel, and it changes on every restart
-// unless you use a named tunnel.
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const STORE_KEY = "sutra.chats.v1";
-
-type Src = { score: number; text: string; name: string };
-type Msg = { role: "user" | "assistant"; text: string; sources?: Src[] };
-type Chat = { id: string; title: string; at: number; msgs: Msg[] };
-
-// Chosen by testing, not by guessing. Every candidate was run through the
-// model and only the ones that produced usable output survived: lists and
-// short notes work, while "summarise this" invented dates that were not in
-// the text and "rewrite this politely" answered with a riddle. Trivia is
-// absent on purpose -- 18B training tokens do not buy reliable facts.
-const EXAMPLES = [
-  { title: "Write a note", body: "Write a thank you note to a colleague who helped me finish a project." },
-  { title: "Give me tips", body: "List five tips for studying effectively." },
-  { title: "Make bullet points", body: "Write five short bullet points about healthy eating." },
-  { title: "Draft an email", body: "Write a short email to my manager asking for two days of leave." },
+const SCORES = [
+  { task: "HellaSwag", random: "25.0", base: "38.4", sft: "39.8", dpo: "40.4" },
+  { task: "ARC-easy", random: "25.0", base: "45.0", sft: "44.8", dpo: "45.0" },
+  { task: "PIQA", random: "50.0", base: "62.6", sft: "65.4", dpo: "65.6" },
+  { task: "WinoGrande", random: "50.0", base: "50.6", sft: "49.0", dpo: "49.0" },
 ];
 
-const newId = () => Math.random().toString(36).slice(2, 10);
+const STAGES = [
+  {
+    n: "01",
+    name: "Tokenizer",
+    time: "3 hours",
+    body: "48,000-token BPE vocabulary covering English and Devanagari, with chat, reasoning and 4,096 audio tokens reserved up front — adding them later would leave their embeddings untrained.",
+  },
+  {
+    n: "02",
+    name: "Pretraining",
+    time: "4 days 9 hours",
+    body: "18B tokens on 4× RTX 6000 Ada at 33% MFU. Held-out perplexity 15.00, zero dead experts, one loss spike that recovered on its own.",
+  },
+  {
+    n: "03",
+    name: "Supervised fine-tuning",
+    time: "18 hours",
+    body: "200,000 conversations across three epochs. Held-out perplexity 5.49, and the third epoch measured best — so no overfitting.",
+  },
+  {
+    n: "04",
+    name: "Preference alignment",
+    time: "6 hours",
+    body: "DPO over 100,000 preference pairs. Held-out accuracy came out at 47.5% against a 50% baseline, so this stage did not generalise — reported here rather than hidden.",
+  },
+];
 
-export default function Home() {
-  const [chats, setChats] = useState<Chat[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [input, setInput] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [online, setOnline] = useState<boolean | null>(null);
-  const [canUpload, setCanUpload] = useState(false);
-  const [doc, setDoc] = useState<{ id: string; name: string; chunks: number } | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [navOpen, setNavOpen] = useState(false);
-  const [copied, setCopied] = useState<number | null>(null);
-  const endRef = useRef<HTMLDivElement>(null);
-  const taRef = useRef<HTMLTextAreaElement>(null);
-
-  const active = chats.find((c) => c.id === activeId) || null;
-  const msgs = active?.msgs ?? [];
-  const empty = msgs.length === 0;
-
-  // Chats live in localStorage, not on the server. The backend is a
-  // workstation behind a tunnel with no database and no accounts, so keeping
-  // history in the browser is the honest place for it -- nothing to leak, and
-  // it survives the tunnel going down.
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORE_KEY);
-      if (raw) setChats(JSON.parse(raw));
-    } catch {
-      /* corrupt or unavailable storage is not worth crashing the page over */
-    }
-  }, []);
-
-  useEffect(() => {
-    if (chats.length) localStorage.setItem(STORE_KEY, JSON.stringify(chats));
-    else localStorage.removeItem(STORE_KEY);
-  }, [chats]);
-
-  // The backend can go away mid-session, so this polls rather than checking
-  // once: a stale "online" badge is worse than no badge.
-  useEffect(() => {
-    const ping = () =>
-      fetch(`${API}/health`)
-        .then(async (r) => {
-          setOnline(r.ok);
-          if (r.ok) setCanUpload(Boolean((await r.json()).upload));
-        })
-        .catch(() => setOnline(false));
-    ping();
-    const t = setInterval(ping, 30000);
-    return () => clearInterval(t);
-  }, []);
-
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [msgs.length, busy]);
-
-  function patchActive(fn: (m: Msg[]) => Msg[], id?: string) {
-    const target = id ?? activeId;
-    setChats((cs) =>
-      cs.map((c) => (c.id === target ? { ...c, msgs: fn(c.msgs), at: Date.now() } : c))
-    );
-  }
-
-  function copy(text: string, i: number) {
-    navigator.clipboard?.writeText(text);
-    setCopied(i);
-    setTimeout(() => setCopied(null), 1400);
-  }
-
-  function regenerate() {
-    // Drop the last exchange and resend the prompt. Sampling is stochastic, so
-    // a second attempt on a model this small is often materially better.
-    const lastUser = [...msgs].reverse().find((m) => m.role === "user");
-    if (!lastUser || busy) return;
-    patchActive((m) => m.slice(0, -2));
-    send(lastUser.text);
-  }
-
-  function grow() {
-    const ta = taRef.current;
-    if (!ta) return;
-    ta.style.height = "auto";
-    ta.style.height = Math.min(ta.scrollHeight, 200) + "px";
-  }
-
-  function newChat() {
-    setActiveId(null);
-    setDoc(null);
-    setNavOpen(false);
-  }
-
-  async function send(text: string) {
-    if (!text.trim() || busy) return;
-    setInput("");
-    setNavOpen(false);
-    if (taRef.current) taRef.current.style.height = "auto";
-
-    let id = activeId;
-    if (!id) {
-      id = newId();
-      const title = text.length > 42 ? text.slice(0, 42).trimEnd() + "…" : text;
-      setChats((cs) => [{ id: id!, title, at: Date.now(), msgs: [] }, ...cs]);
-      setActiveId(id);
-    }
-
-    patchActive((m) => [...m, { role: "user", text }, { role: "assistant", text: "" }], id);
-    setBusy(true);
-
-    try {
-      const res = await fetch(`${API}/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: text,
-          max_tokens: 512,
-          temperature: 0.5,
-          doc_id: doc?.id ?? null,
-        }),
-      });
-      if (!res.body) throw new Error("no stream");
-
-      const reader = res.body.getReader();
-      const dec = new TextDecoder();
-      let buf = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        // SSE frames are separated by a blank line, and a network chunk can
-        // split one in half -- keep the remainder for the next round.
-        const frames = buf.split("\n\n");
-        buf = frames.pop() || "";
-        for (const f of frames) {
-          if (!f.startsWith("data: ")) continue;
-          const d = JSON.parse(f.slice(6));
-          if (d.sources?.length)
-            patchActive((m) => {
-              const c = [...m];
-              c[c.length - 1] = { ...c[c.length - 1], sources: d.sources };
-              return c;
-            }, id);
-          if (d.token)
-            patchActive((m) => {
-              const c = [...m];
-              c[c.length - 1] = { ...c[c.length - 1], text: c[c.length - 1].text + d.token };
-              return c;
-            }, id);
-        }
-      }
-    } catch {
-      patchActive((m) => {
-        const c = [...m];
-        c[c.length - 1] = {
-          role: "assistant",
-          text: "Could not reach the model server. It runs on a workstation behind a tunnel and may be offline right now.",
-        };
-        return c;
-      }, id);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function upload(f: File) {
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append("file", f);
-      const r = await fetch(`${API}/upload`, { method: "POST", body: fd });
-      const d = await r.json();
-      if (!r.ok) throw new Error(d.detail || "upload failed");
-      setDoc({ id: d.doc_id, name: d.name, chunks: d.chunks });
-      let id = activeId;
-      if (!id) {
-        id = newId();
-        setChats((cs) => [{ id: id!, title: d.name, at: Date.now(), msgs: [] }, ...cs]);
-        setActiveId(id);
-      }
-      patchActive(
-        (m) => [
-          ...m,
-          {
-            role: "assistant",
-            text: `Indexed ${d.name} — ${d.chunks} passages. Ask about it and I will answer from the document rather than from memory.`,
-          },
-        ],
-        id
-      );
-    } catch (e) {
-      alert(`Could not read that file. ${(e as Error).message}`);
-    } finally {
-      setUploading(false);
-    }
-  }
-
+export default function Landing() {
   return (
-    <div className={`shell ${navOpen ? "navopen" : ""}`}>
-      <aside>
-        <div className="asidetop">
-          <div className="brand">
-            <span className="mark">स</span>
-            <span className="name">Sutra</span>
-            <span className="badge">1.3B</span>
-          </div>
-          <button className="newchat" onClick={newChat}>
-            <span>＋</span> New chat
-          </button>
+    <div className="land">
+      <nav className="lnav">
+        <div className="brand">
+          <span className="mark">स</span>
+          <span className="name">Sutra</span>
+          <span className="badge">1.3B</span>
         </div>
-
-        <div className="history">
-          {chats.length === 0 && <p className="empty">Saved chats appear here</p>}
-          {chats.map((c) => (
-            <div key={c.id} className={`histrow ${c.id === activeId ? "on" : ""}`}>
-              <button
-                onClick={() => {
-                  setActiveId(c.id);
-                  setNavOpen(false);
-                }}
-              >
-                {c.title}
-              </button>
-              <span
-                role="button"
-                aria-label="Delete chat"
-                onClick={() => {
-                  setChats((cs) => cs.filter((x) => x.id !== c.id));
-                  if (activeId === c.id) setActiveId(null);
-                }}
-              >
-                ×
-              </span>
-            </div>
-          ))}
+        <div className="lnavlinks">
+          <a href="#architecture">Architecture</a>
+          <a href="#results">Results</a>
+          <a href="https://github.com/Abhisingh18/Sutra-1.3B-Model">GitHub</a>
+          <Link href="/chat" className="cta small">
+            Try it
+          </Link>
         </div>
+      </nav>
 
-        <div className="asidefoot">
-          <span className={`status ${online ? "up" : online === false ? "down" : ""}`}>
-            <i /> {online === null ? "checking" : online ? "online" : "offline"}
-          </span>
-          <div className="links">
-            <a href="https://github.com/Abhisingh18/Sutra-1.3B-Model">GitHub</a>
-            <a href="https://huggingface.co/Abhisingh-18/Sutra-1.3B-Chat">Weights</a>
-          </div>
-        </div>
-      </aside>
-
-      <div className="pane" onClick={() => navOpen && setNavOpen(false)} />
-
-      <div className="col">
-        <header>
-          <button className="burger" onClick={() => setNavOpen(!navOpen)} aria-label="Menu">
-            ☰
-          </button>
-          <span className="htitle">{active ? active.title : "New chat"}</span>
-        </header>
-
-        <main className={empty ? "centered" : ""}>
-          {empty ? (
-            <div className="hero">
-              <h1>
-                Trained from scratch.
-                <br />
-                <span className="dim">Ask it anything.</span>
-              </h1>
-              <p className="lede">
-                A 1.32B-parameter Mixture-of-Experts model pretrained on 18B tokens,
-                then tuned with SFT and DPO. Only 0.28B parameters run per token.
-                It writes and rewrites well; for anything factual, upload a
-                document and it will answer from that.
-              </p>
-              <div className="cards">
-                {EXAMPLES.map((e) => (
-                  <button key={e.body} className="card" onClick={() => send(e.body)}>
-                    <strong>{e.title}</strong>
-                    <span>{e.body}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="thread">
-              {msgs.map((m, i) => (
-                <div key={i} className={`turn ${m.role}`}>
-                  <div className="who">{m.role === "user" ? "You" : "Sutra"}</div>
-                  <div className="body">
-                    {m.text ? (
-                      m.role === "assistant" ? (
-                        <Markdown text={m.text} />
-                      ) : (
-                        m.text
-                      )
-                    ) : (
-                      <span className="dots">
-                        <i />
-                        <i />
-                        <i />
-                      </span>
-                    )}
-                  </div>
-                  {m.role === "assistant" && m.text && !busy && (
-                    <div className="actions">
-                      <button onClick={() => copy(m.text, i)}>
-                        {copied === i ? "Copied" : "Copy"}
-                      </button>
-                      {i === msgs.length - 1 && (
-                        <button onClick={regenerate}>Regenerate</button>
-                      )}
-                    </div>
-                  )}
-                  {m.sources?.length ? (
-                    <details className="sources">
-                      <summary>
-                        Answered from {m.sources.length} passage
-                        {m.sources.length > 1 ? "s" : ""} — check it
-                      </summary>
-                      {m.sources.map((s, j) => (
-                        <blockquote key={j}>
-                          <cite>
-                            {s.name} · {s.score}
-                          </cite>
-                          {s.text}
-                        </blockquote>
-                      ))}
-                    </details>
-                  ) : null}
-                </div>
-              ))}
-              <div ref={endRef} />
-            </div>
-          )}
-        </main>
-
-        <div className="composer-wrap">
-          <form
-            className="composer"
-            onSubmit={(e) => {
-              e.preventDefault();
-              send(input);
-            }}
+      <header className="lhero">
+        <span className="eyebrow">Built from first principles in PyTorch</span>
+        <h1>
+          A language model
+          <br />
+          <span className="grad">trained from scratch.</span>
+        </h1>
+        <p>
+          1.32 billion parameters, 48 experts, 18 billion tokens of training —
+          own tokenizer, own data pipeline, own training loop. No pretrained
+          weights. No <code>Trainer</code>. Nothing inherited.
+        </p>
+        <div className="herocta">
+          <Link href="/chat" className="cta">
+            Start chatting
+          </Link>
+          <a
+            className="ghost"
+            href="https://huggingface.co/Abhisingh-18/Sutra-1.3B-Chat"
           >
-            <textarea
-              ref={taRef}
-              value={input}
-              rows={1}
-              placeholder="Ask Sutra anything…"
-              onChange={(e) => {
-                setInput(e.target.value);
-                grow();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  send(input);
-                }
-              }}
-            />
-            <button type="submit" disabled={busy || !input.trim()} aria-label="Send">
-              {busy ? <span className="spin" /> : "↑"}
-            </button>
-          </form>
-
-          <div className="tools">
-            {canUpload && (
-              <label className="tool">
-                <input
-                  type="file"
-                  accept=".txt,.md,.pdf"
-                  hidden
-                  disabled={uploading}
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) upload(f);
-                    e.target.value = "";
-                  }}
-                />
-                {uploading ? "Indexing…" : "＋ Upload a document"}
-              </label>
-            )}
-            {doc && (
-              <span className="chip">
-                {doc.name} · {doc.chunks} passages
-                <button onClick={() => setDoc(null)} aria-label="Remove">
-                  ×
-                </button>
-              </span>
-            )}
-          </div>
-
-          <p className="disclaimer">
-            Trained on 18B tokens — about 500x less than comparable 1B models. It
-            writes fluently but does not reliably know facts.
-          </p>
+            Download weights
+          </a>
         </div>
-      </div>
+        <dl className="stats">
+          <div>
+            <dt>1.32B</dt>
+            <dd>total parameters</dd>
+          </div>
+          <div>
+            <dt>0.28B</dt>
+            <dd>active per token</dd>
+          </div>
+          <div>
+            <dt>18B</dt>
+            <dd>training tokens</dd>
+          </div>
+          <div>
+            <dt>4.5</dt>
+            <dd>days on 4 GPUs</dd>
+          </div>
+        </dl>
+      </header>
+
+      <section id="architecture" className="lsec">
+        <h2>Mixture of Experts, with latent attention</h2>
+        <p className="sub">
+          Only four of forty-eight experts run for any given token, so the model
+          carries 1.32B parameters of capacity at 0.28B parameters of compute.
+          That ratio is why it answers on a CPU at roughly ten tokens a second.
+        </p>
+        <div className="grid3">
+          <article>
+            <h3>48 + 1 experts</h3>
+            <p>
+              Top-4 routing with sigmoid scoring and bias-based load balancing.
+              One shared expert always fires, absorbing what every token needs so
+              the routed ones can specialise. Layer 0 stays dense — routing on
+              raw embeddings collapses early.
+            </p>
+          </article>
+          <article>
+            <h3>Latent attention</h3>
+            <p>
+              Multi-head Latent Attention compresses keys and values into a
+              256-wide latent before projection, with rotary position handled on
+              a decoupled 32-dimension head split.
+            </p>
+          </article>
+          <article>
+            <h3>Built to be interrupted</h3>
+            <p>
+              Checkpoints written atomically, batches a deterministic function of
+              step and rank, and a loss-spike guard that rolls back. A four-day
+              run does not finish uninterrupted.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="results" className="lsec">
+        <h2>Measured, not claimed</h2>
+        <p className="sub">
+          Log-likelihood scoring over 500 examples per task, length-normalised.
+          Reproduce with <code>python -m src.eval --compare</code>.
+        </p>
+        <div className="tablewrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Task</th>
+                <th>Random</th>
+                <th>Base</th>
+                <th>SFT</th>
+                <th>DPO</th>
+              </tr>
+            </thead>
+            <tbody>
+              {SCORES.map((r) => (
+                <tr key={r.task}>
+                  <td>{r.task}</td>
+                  <td className="mute">{r.random}</td>
+                  <td>{r.base}</td>
+                  <td>{r.sft}</td>
+                  <td className="win">{r.dpo}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="note">
+          ARC-easy and PIQA sit well clear of chance, so the model learned real
+          commonsense rather than fluent grammar alone. WinoGrande sits{" "}
+          <em>at</em> chance — the pronoun-resolution reasoning it measures never
+          arrived, which is the sharpest available statement of what 0.28B active
+          parameters do not buy.
+        </p>
+      </section>
+
+      <section className="lsec">
+        <h2>Four stages, eleven days</h2>
+        <ol className="stages">
+          {STAGES.map((s) => (
+            <li key={s.n}>
+              <span className="num">{s.n}</span>
+              <div>
+                <h3>
+                  {s.name} <span className="time">{s.time}</span>
+                </h3>
+                <p>{s.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="lsec honest">
+        <h2>What it cannot do</h2>
+        <p className="sub">
+          Trained on 18B tokens — roughly 500× less than comparable 1B models.
+          That gap shows up in specific, predictable ways, and pretending
+          otherwise would waste your time.
+        </p>
+        <div className="grid2">
+          <article className="can">
+            <h3>Does well</h3>
+            <ul>
+              <li>Writes and rewrites — notes, emails, short paragraphs</li>
+              <li>Follows formatting instructions: lists, bullets, tone</li>
+              <li>Answers from a document you upload</li>
+            </ul>
+          </article>
+          <article className="cant">
+            <h3>Does not</h3>
+            <ul>
+              <li>Recall facts reliably — it states wrong ones confidently</li>
+              <li>Reason across multiple steps</li>
+              <li>Write working code</li>
+              <li>Copy figures accurately, even out of a passage it just read</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section className="lsec cend">
+        <h2>Talk to it</h2>
+        <p className="sub">
+          Runs on a workstation behind a tunnel. Upload a document and it will
+          answer from that, with the passage it used shown underneath.
+        </p>
+        <Link href="/chat" className="cta">
+          Open the chat
+        </Link>
+      </section>
+
+      <footer className="lfoot">
+        <span>Sutra-1.3B · Apache 2.0</span>
+        <div>
+          <a href="https://github.com/Abhisingh18/Sutra-1.3B-Model">GitHub</a>
+          <a href="https://huggingface.co/Abhisingh-18/Sutra-1.3B-Chat">
+            Hugging Face
+          </a>
+        </div>
+      </footer>
     </div>
   );
 }

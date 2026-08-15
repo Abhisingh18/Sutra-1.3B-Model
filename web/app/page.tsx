@@ -47,40 +47,51 @@ const STAGES = [
 export default function Landing() {
   return (
     <div className="land">
+      {/* Full-bleed wash behind the top of the page. Saffron at the crown
+          falling through periwinkle into the page background, so the fold has
+          weight without any imagery to load. */}
+      <div className="wash" aria-hidden="true" />
+
       <nav className="lnav">
         <div className="brand">
           <span className="mark">स</span>
           <span className="name">Sutra</span>
-          <span className="badge">1.3B</span>
         </div>
         <div className="lnavlinks">
           <a href="#architecture">Architecture</a>
           <a href="#results">Results</a>
           <a href="https://github.com/Abhisingh18/Sutra-1.3B-Model">GitHub</a>
-          <Link href="/chat" className="cta small">
+        </div>
+        <div className="navactions">
+          <Link href="/chat" className="pill dark">
             Try it
+          </Link>
+          <Link href="/login" className="pill light">
+            Sign in
           </Link>
         </div>
       </nav>
 
       <header className="lhero">
-        <span className="eyebrow">Built from first principles in PyTorch</span>
-        <h1>
-          A language model
-          <br />
-          <span className="grad">trained from scratch.</span>
-        </h1>
+        <span className="ornament" aria-hidden="true">
+          ❦
+        </span>
+        <span className="eyebrow">
+          <span>Trained from scratch in PyTorch</span>
+        </span>
+        <h1>A language model built from nothing</h1>
         <p>
-          1.32 billion parameters, 48 experts, 18 billion tokens of training —
-          own tokenizer, own data pipeline, own training loop. No pretrained
-          weights. No <code>Trainer</code>. Nothing inherited.
+          1.32 billion parameters across 48 experts, pretrained on 18 billion
+          tokens.
+          <br />
+          Own tokenizer, own data pipeline, own training loop.
         </p>
         <div className="herocta">
-          <Link href="/chat" className="cta">
+          <Link href="/chat" className="pill dark big">
             Start chatting
           </Link>
           <a
-            className="ghost"
+            className="pill light big"
             href="https://huggingface.co/Abhisingh-18/Sutra-1.3B-Chat"
           >
             Download weights

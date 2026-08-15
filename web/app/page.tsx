@@ -77,14 +77,16 @@ export default function Landing() {
           ❦
         </span>
         <span className="eyebrow">
-          <span>Trained from scratch in PyTorch</span>
+          <span>Pretrained · Fine-tuned · Aligned</span>
         </span>
-        <h1>A language model built from nothing</h1>
+        <h1>
+          Every weight <em>learned from zero.</em>
+        </h1>
         <p>
-          1.32 billion parameters across 48 experts, pretrained on 18 billion
-          tokens.
-          <br />
-          Own tokenizer, own data pipeline, own training loop.
+          A 1.32-billion-parameter Mixture-of-Experts model, written from first
+          principles in PyTorch — own tokenizer, own data pipeline, own training
+          loop. Nothing pretrained, nothing inherited, no <code>Trainer</code>
+          anywhere in the stack.
         </p>
         <div className="herocta">
           <Link href="/chat" className="pill dark big">
@@ -100,19 +102,19 @@ export default function Landing() {
         <dl className="stats">
           <div>
             <dt>1.32B</dt>
-            <dd>total parameters</dd>
+            <dd>parameters, 48 experts</dd>
           </div>
           <div>
             <dt>0.28B</dt>
-            <dd>active per token</dd>
+            <dd>active per token — 4.7× sparse</dd>
           </div>
           <div>
             <dt>18B</dt>
-            <dd>training tokens</dd>
+            <dd>tokens of pretraining</dd>
           </div>
           <div>
-            <dt>4.5</dt>
-            <dd>days on 4 GPUs</dd>
+            <dt>11</dt>
+            <dd>days, tokenizer to aligned</dd>
           </div>
         </dl>
       </header>

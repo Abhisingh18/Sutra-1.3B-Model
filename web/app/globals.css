@@ -1948,3 +1948,17 @@ thead th:last-child {
 .cend > h2::before {
   margin-inline: auto;
 }
+
+/* The italic half of the headline carries the emphasis, which is what the
+   serif was chosen for -- a second colour here would fight the wash. */
+.lhero h1 em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+/* Stat figures sit close under their labels; the label is doing real work
+   now that it carries a qualifier rather than a bare noun. */
+.stats dd {
+  line-height: 1.45;
+  max-width: 22ch;
+}

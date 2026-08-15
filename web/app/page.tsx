@@ -6,9 +6,11 @@ import { useEffect, useRef, useState } from "react";
 // URL printed by deploy/server.py's tunnel, and it changes on every restart
 // unless you use a named tunnel.
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const STORE_KEY = "sutra.chats.v1";
 
 type Src = { score: number; text: string; name: string };
 type Msg = { role: "user" | "assistant"; text: string; sources?: Src[] };
+type Chat = { id: string; title: string; at: number; msgs: Msg[] };
 
 // Chosen by testing, not by guessing. Every candidate was run through the
 // model and only the ones that produced usable output survived: lists and
@@ -16,56 +18,57 @@ type Msg = { role: "user" | "assistant"; text: string; sources?: Src[] };
 // the text and "rewrite this politely" answered with a riddle. Trivia is
 // absent on purpose -- 18B training tokens do not buy reliable facts.
 const EXAMPLES = [
-  {
-    title: "Write a note",
-    body: "Write a thank you note to a colleague who helped me finish a project.",
-  },
-  {
-    title: "Give me tips",
-    body: "List five tips for studying effectively.",
-  },
-  {
-    title: "Make bullet points",
-    body: "Write five short bullet points about healthy eating.",
-  },
-  {
-    title: "Draft an email",
-    body: "Write a short email to my manager asking for two days of leave.",
-  },
+  { title: "Write a note", body: "Write a thank you note to a colleague who helped me finish a project." },
+  { title: "Give me tips", body: "List five tips for studying effectively." },
+  { title: "Make bullet points", body: "Write five short bullet points about healthy eating." },
+  { title: "Draft an email", body: "Write a short email to my manager asking for two days of leave." },
 ];
 
+const newId = () => Math.random().toString(36).slice(2, 10);
+
 export default function Home() {
-  const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [chats, setChats] = useState<Chat[]>([]);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [online, setOnline] = useState<boolean | null>(null);
-  // No Wikipedia retrieval. Four indexes were built -- 60k, 500k, 400k
-  // shuffled, 150k length-filtered -- and recall@3 never moved off 50%.
-  // The cause is arithmetic, not a bug: any few-hundred-thousand sample is
-  // 2-6% of Wikipedia, so a question about one specific article misses most
-  // of the time, and a confident wrong passage is worse than none. Covering
-  // it properly means ~29 GB of embeddings and a disk-backed index.
-  //
-  // Uploaded documents have no such problem: coverage is total by
-  // construction, which is what makes that the feature worth shipping.
   const [canUpload, setCanUpload] = useState(false);
   const [doc, setDoc] = useState<{ id: string; name: string; chunks: number } | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
-  // The backend runs on a workstation behind a tunnel, so "is it up" is a real
-  // question the UI must answer -- a dead tunnel otherwise looks identical to a
-  // slow model.
+  const active = chats.find((c) => c.id === activeId) || null;
+  const msgs = active?.msgs ?? [];
+  const empty = msgs.length === 0;
+
+  // Chats live in localStorage, not on the server. The backend is a
+  // workstation behind a tunnel with no database and no accounts, so keeping
+  // history in the browser is the honest place for it -- nothing to leak, and
+  // it survives the tunnel going down.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORE_KEY);
+      if (raw) setChats(JSON.parse(raw));
+    } catch {
+      /* corrupt or unavailable storage is not worth crashing the page over */
+    }
+  }, []);
+
+  useEffect(() => {
+    if (chats.length) localStorage.setItem(STORE_KEY, JSON.stringify(chats));
+    else localStorage.removeItem(STORE_KEY);
+  }, [chats]);
+
+  // The backend can go away mid-session, so this polls rather than checking
+  // once: a stale "online" badge is worse than no badge.
   useEffect(() => {
     const ping = () =>
       fetch(`${API}/health`)
         .then(async (r) => {
           setOnline(r.ok);
-          if (r.ok) {
-            const h = await r.json();
-            setCanUpload(Boolean(h.upload));
-          }
+          if (r.ok) setCanUpload(Boolean((await r.json()).upload));
         })
         .catch(() => setOnline(false));
     ping();
@@ -75,7 +78,14 @@ export default function Home() {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [msgs]);
+  }, [msgs.length, busy]);
+
+  function patchActive(fn: (m: Msg[]) => Msg[], id?: string) {
+    const target = id ?? activeId;
+    setChats((cs) =>
+      cs.map((c) => (c.id === target ? { ...c, msgs: fn(c.msgs), at: Date.now() } : c))
+    );
+  }
 
   function grow() {
     const ta = taRef.current;
@@ -84,11 +94,27 @@ export default function Home() {
     ta.style.height = Math.min(ta.scrollHeight, 200) + "px";
   }
 
+  function newChat() {
+    setActiveId(null);
+    setDoc(null);
+    setNavOpen(false);
+  }
+
   async function send(text: string) {
     if (!text.trim() || busy) return;
     setInput("");
+    setNavOpen(false);
     if (taRef.current) taRef.current.style.height = "auto";
-    setMsgs((m) => [...m, { role: "user", text }, { role: "assistant", text: "" }]);
+
+    let id = activeId;
+    if (!id) {
+      id = newId();
+      const title = text.length > 42 ? text.slice(0, 42).trimEnd() + "…" : text;
+      setChats((cs) => [{ id: id!, title, at: Date.now(), msgs: [] }, ...cs]);
+      setActiveId(id);
+    }
+
+    patchActive((m) => [...m, { role: "user", text }, { role: "assistant", text: "" }], id);
     setBusy(true);
 
     try {
@@ -119,34 +145,29 @@ export default function Home() {
         for (const f of frames) {
           if (!f.startsWith("data: ")) continue;
           const d = JSON.parse(f.slice(6));
-          if (d.sources?.length) {
-            setMsgs((m) => {
+          if (d.sources?.length)
+            patchActive((m) => {
               const c = [...m];
               c[c.length - 1] = { ...c[c.length - 1], sources: d.sources };
               return c;
-            });
-          }
-          if (d.token) {
-            setMsgs((m) => {
+            }, id);
+          if (d.token)
+            patchActive((m) => {
               const c = [...m];
-              c[c.length - 1] = {
-                role: "assistant",
-                text: c[c.length - 1].text + d.token,
-              };
+              c[c.length - 1] = { ...c[c.length - 1], text: c[c.length - 1].text + d.token };
               return c;
-            });
-          }
+            }, id);
         }
       }
     } catch {
-      setMsgs((m) => {
+      patchActive((m) => {
         const c = [...m];
         c[c.length - 1] = {
           role: "assistant",
           text: "Could not reach the model server. It runs on a workstation behind a tunnel and may be offline right now.",
         };
         return c;
-      });
+      }, id);
     } finally {
       setBusy(false);
     }
@@ -161,157 +182,211 @@ export default function Home() {
       const d = await r.json();
       if (!r.ok) throw new Error(d.detail || "upload failed");
       setDoc({ id: d.doc_id, name: d.name, chunks: d.chunks });
-      setMsgs((m) => [
-        ...m,
-        {
-          role: "assistant",
-          text: `Indexed ${d.name} — ${d.chunks} passages. Ask me about it; I will answer from the document rather than from memory.`,
-        },
-      ]);
+      let id = activeId;
+      if (!id) {
+        id = newId();
+        setChats((cs) => [{ id: id!, title: d.name, at: Date.now(), msgs: [] }, ...cs]);
+        setActiveId(id);
+      }
+      patchActive(
+        (m) => [
+          ...m,
+          {
+            role: "assistant",
+            text: `Indexed ${d.name} — ${d.chunks} passages. Ask about it and I will answer from the document rather than from memory.`,
+          },
+        ],
+        id
+      );
     } catch (e) {
-      setMsgs((m) => [
-        ...m,
-        { role: "assistant", text: `Could not read that file. ${(e as Error).message}` },
-      ]);
+      alert(`Could not read that file. ${(e as Error).message}`);
     } finally {
       setUploading(false);
     }
   }
 
-  const empty = msgs.length === 0;
-
   return (
-    <div className="shell">
-      <nav>
-        <div className="brand">
-          <span className="mark">स</span>
-          <span className="name">Sutra</span>
-          <span className="badge">1.3B</span>
+    <div className={`shell ${navOpen ? "navopen" : ""}`}>
+      <aside>
+        <div className="asidetop">
+          <div className="brand">
+            <span className="mark">स</span>
+            <span className="name">Sutra</span>
+            <span className="badge">1.3B</span>
+          </div>
+          <button className="newchat" onClick={newChat}>
+            <span>＋</span> New chat
+          </button>
         </div>
-        <div className="navlinks">
+
+        <div className="history">
+          {chats.length === 0 && <p className="empty">Saved chats appear here</p>}
+          {chats.map((c) => (
+            <div key={c.id} className={`histrow ${c.id === activeId ? "on" : ""}`}>
+              <button
+                onClick={() => {
+                  setActiveId(c.id);
+                  setNavOpen(false);
+                }}
+              >
+                {c.title}
+              </button>
+              <span
+                role="button"
+                aria-label="Delete chat"
+                onClick={() => {
+                  setChats((cs) => cs.filter((x) => x.id !== c.id));
+                  if (activeId === c.id) setActiveId(null);
+                }}
+              >
+                ×
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="asidefoot">
           <span className={`status ${online ? "up" : online === false ? "down" : ""}`}>
             <i /> {online === null ? "checking" : online ? "online" : "offline"}
           </span>
-          <a href="https://github.com/Abhisingh18/Sutra-1.3B-Model">GitHub</a>
-          <a href="https://huggingface.co/Abhisingh-18/Sutra-1.3B-Chat">Weights</a>
+          <div className="links">
+            <a href="https://github.com/Abhisingh18/Sutra-1.3B-Model">GitHub</a>
+            <a href="https://huggingface.co/Abhisingh-18/Sutra-1.3B-Chat">Weights</a>
+          </div>
         </div>
-      </nav>
+      </aside>
 
-      <main className={empty ? "centered" : ""}>
-        {empty ? (
-          <div className="hero">
-            <h1>
-              Trained from scratch.
-              <br />
-              <span className="dim">Ask it anything.</span>
-            </h1>
-            <p className="lede">
-              A 1.32B-parameter Mixture-of-Experts model pretrained on 18B tokens,
-              then tuned with SFT and DPO. Only 0.28B parameters run per token.
-              It writes and rewrites well; for anything factual, upload a
-              document and it will answer from that.
-            </p>
-            <div className="cards">
-              {EXAMPLES.map((e) => (
-                <button key={e.body} className="card" onClick={() => send(e.body)}>
-                  <strong>{e.title}</strong>
-                  <span>{e.body}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="thread">
-            {msgs.map((m, i) => (
-              <div key={i} className={`turn ${m.role}`}>
-                <div className="who">{m.role === "user" ? "You" : "Sutra"}</div>
-                <div className="body">
-                  {m.text || <span className="dots"><i /><i /><i /></span>}
-                </div>
-                {m.sources?.length ? (
-                  <details className="sources">
-                    <summary>
-                      Answered from {m.sources.length} passage
-                      {m.sources.length > 1 ? "s" : ""} — check it
-                    </summary>
-                    {m.sources.map((s, j) => (
-                      <blockquote key={j}>
-                        <cite>
-                          {s.name} · {s.score}
-                        </cite>
-                        {s.text}
-                      </blockquote>
-                    ))}
-                  </details>
-                ) : null}
-              </div>
-            ))}
-            <div ref={endRef} />
-          </div>
-        )}
-      </main>
+      <div className="pane" onClick={() => navOpen && setNavOpen(false)} />
 
-      <div className="composer-wrap">
-        <form
-          className="composer"
-          onSubmit={(e) => {
-            e.preventDefault();
-            send(input);
-          }}
-        >
-          <textarea
-            ref={taRef}
-            value={input}
-            rows={1}
-            placeholder="Ask Sutra anything…"
-            onChange={(e) => {
-              setInput(e.target.value);
-              grow();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                send(input);
-              }
-            }}
-          />
-          <button type="submit" disabled={busy || !input.trim()} aria-label="Send">
-            {busy ? <span className="spin" /> : "↑"}
+      <div className="col">
+        <header>
+          <button className="burger" onClick={() => setNavOpen(!navOpen)} aria-label="Menu">
+            ☰
           </button>
-        </form>
-        <div className="tools">
-          {canUpload && (
-            <label className="tool">
-              <input
-                type="file"
-                accept=".txt,.md,.pdf"
-                hidden
-                disabled={uploading}
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) upload(f);
-                  e.target.value = "";
-                }}
-              />
-              {uploading ? "Indexing…" : "＋ Upload a document"}
-            </label>
+          <span className="htitle">{active ? active.title : "New chat"}</span>
+        </header>
+
+        <main className={empty ? "centered" : ""}>
+          {empty ? (
+            <div className="hero">
+              <h1>
+                Trained from scratch.
+                <br />
+                <span className="dim">Ask it anything.</span>
+              </h1>
+              <p className="lede">
+                A 1.32B-parameter Mixture-of-Experts model pretrained on 18B tokens,
+                then tuned with SFT and DPO. Only 0.28B parameters run per token.
+                It writes and rewrites well; for anything factual, upload a
+                document and it will answer from that.
+              </p>
+              <div className="cards">
+                {EXAMPLES.map((e) => (
+                  <button key={e.body} className="card" onClick={() => send(e.body)}>
+                    <strong>{e.title}</strong>
+                    <span>{e.body}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="thread">
+              {msgs.map((m, i) => (
+                <div key={i} className={`turn ${m.role}`}>
+                  <div className="who">{m.role === "user" ? "You" : "Sutra"}</div>
+                  <div className="body">
+                    {m.text || (
+                      <span className="dots">
+                        <i />
+                        <i />
+                        <i />
+                      </span>
+                    )}
+                  </div>
+                  {m.sources?.length ? (
+                    <details className="sources">
+                      <summary>
+                        Answered from {m.sources.length} passage
+                        {m.sources.length > 1 ? "s" : ""} — check it
+                      </summary>
+                      {m.sources.map((s, j) => (
+                        <blockquote key={j}>
+                          <cite>
+                            {s.name} · {s.score}
+                          </cite>
+                          {s.text}
+                        </blockquote>
+                      ))}
+                    </details>
+                  ) : null}
+                </div>
+              ))}
+              <div ref={endRef} />
+            </div>
           )}
-          {doc && (
-            <span className="chip">
-              {doc.name} · {doc.chunks} passages
-              <button onClick={() => setDoc(null)} aria-label="Remove">×</button>
-            </span>
-          )}
-          {!doc && (
-            <span className="hint">
-              Upload a document to get answers grounded in it
-            </span>
-          )}
+        </main>
+
+        <div className="composer-wrap">
+          <form
+            className="composer"
+            onSubmit={(e) => {
+              e.preventDefault();
+              send(input);
+            }}
+          >
+            <textarea
+              ref={taRef}
+              value={input}
+              rows={1}
+              placeholder="Ask Sutra anything…"
+              onChange={(e) => {
+                setInput(e.target.value);
+                grow();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  send(input);
+                }
+              }}
+            />
+            <button type="submit" disabled={busy || !input.trim()} aria-label="Send">
+              {busy ? <span className="spin" /> : "↑"}
+            </button>
+          </form>
+
+          <div className="tools">
+            {canUpload && (
+              <label className="tool">
+                <input
+                  type="file"
+                  accept=".txt,.md,.pdf"
+                  hidden
+                  disabled={uploading}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) upload(f);
+                    e.target.value = "";
+                  }}
+                />
+                {uploading ? "Indexing…" : "＋ Upload a document"}
+              </label>
+            )}
+            {doc && (
+              <span className="chip">
+                {doc.name} · {doc.chunks} passages
+                <button onClick={() => setDoc(null)} aria-label="Remove">
+                  ×
+                </button>
+              </span>
+            )}
+          </div>
+
+          <p className="disclaimer">
+            Trained on 18B tokens — about 500x less than comparable 1B models. It
+            writes fluently but does not reliably know facts.
+          </p>
         </div>
-        <p className="disclaimer">
-          Trained on 18B tokens — about 500x less than comparable 1B models. It
-          writes fluently but does not reliably know facts.
-        </p>
       </div>
     </div>
   );

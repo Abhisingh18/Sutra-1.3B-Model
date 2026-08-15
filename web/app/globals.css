@@ -24,6 +24,15 @@
 
   --sky: #a9c4f5;
   --sky-soft: #e3ecfd;
+
+  /* Saffron is the second half of every gradient on the page. It never
+     appears on its own -- as a flat fill next to indigo the two argue; blended
+     into one another they read as a single warm-to-cool sweep. */
+  --saffron: #ff7a1a;
+  --saffron-hi: #ffa04a;
+  --saffron-deep: #ea5f00;
+  --saffron-soft: #fff1e4;
+
   --amber: #b45309;
   --amber-soft: #fef4e7;
 
@@ -812,12 +821,22 @@ main.centered {
      second. */
   background:
     radial-gradient(
-      120% 62% at 50% -16%,
-      color-mix(in srgb, var(--accent-hi) 28%, transparent) 0%,
-      color-mix(in srgb, var(--sky) 34%, transparent) 32%,
-      transparent 68%
+      110% 58% at 26% -14%,
+      color-mix(in srgb, var(--saffron) 30%, transparent) 0%,
+      color-mix(in srgb, var(--saffron-hi) 15%, transparent) 34%,
+      transparent 66%
     ),
-    linear-gradient(180deg, var(--sky-soft) 0%, transparent 58%);
+    radial-gradient(
+      110% 62% at 76% -8%,
+      color-mix(in srgb, var(--accent-hi) 28%, transparent) 0%,
+      color-mix(in srgb, var(--sky) 20%, transparent) 38%,
+      transparent 70%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--sky-soft) 70%, var(--saffron-soft)) 0%,
+      transparent 56%
+    );
 }
 
 /* Three columns, not space-between. With space-between the centre group
@@ -859,7 +878,7 @@ main.centered {
   display: grid;
   place-items: center;
   border-radius: 9px;
-  background: linear-gradient(145deg, var(--accent-hi), var(--accent-deep));
+  background: linear-gradient(145deg, var(--saffron), var(--accent) 60%, var(--accent-deep));
   color: #fff;
   font-size: 15px;
   font-weight: 600;
@@ -1005,8 +1024,8 @@ main.centered {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+  background: linear-gradient(135deg, var(--saffron), var(--accent));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--saffron) 22%, transparent);
 }
 
 .hero h1 {
@@ -1480,12 +1499,17 @@ td.win {
   width: 100vw;
   height: 360px;
   transform: translateX(-50%);
-  background: radial-gradient(
-    120% 90% at 50% -30%,
-    color-mix(in srgb, var(--accent-hi) 22%, transparent) 0%,
-    color-mix(in srgb, var(--sky) 24%, transparent) 38%,
-    transparent 84%
-  );
+  background:
+    radial-gradient(
+      110% 90% at 28% -30%,
+      color-mix(in srgb, var(--saffron) 24%, transparent) 0%,
+      transparent 64%
+    ),
+    radial-gradient(
+      110% 90% at 74% -24%,
+      color-mix(in srgb, var(--accent-hi) 24%, transparent) 0%,
+      transparent 66%
+    );
   pointer-events: none;
 }
 
@@ -1849,7 +1873,7 @@ td.win {
   height: 2px;
   margin: 0 auto 20px;
   border-radius: 2px;
-  background: linear-gradient(90deg, var(--accent), var(--sky));
+  background: linear-gradient(90deg, var(--saffron), var(--accent) 70%, var(--accent-deep));
 }
 
 /* Amber appears exactly once on the page: the winning column. A second blue
@@ -1872,16 +1896,18 @@ td.win {
   box-shadow: 0 2px 6px rgba(15, 23, 41, 0.05), 0 20px 44px rgba(15, 23, 41, 0.09);
 }
 
+/* Each dot takes a different slice of the same warm-to-cool sweep, so three
+   cards read as three things without introducing a fourth colour. */
 .dot {
-  background: linear-gradient(135deg, var(--accent-hi), var(--accent));
+  background: linear-gradient(135deg, var(--saffron), var(--accent));
 }
 
 .cards .card:nth-child(2) .dot {
-  background: linear-gradient(135deg, var(--sky), var(--accent-deep));
+  background: linear-gradient(135deg, var(--accent-hi), var(--accent-deep));
 }
 
 .cards .card:nth-child(3) .dot {
-  background: linear-gradient(135deg, var(--accent-hi), var(--accent-deep));
+  background: linear-gradient(135deg, var(--saffron-hi), var(--saffron-deep));
 }
 
 /* The ornament was a warm flourish on a warm page; on blue it reads better as
@@ -1908,12 +1934,14 @@ td.win {
 
 /* The closing band inherits the same blue family instead of an orange one. */
 .band {
-  background: radial-gradient(
-    120% 150% at 50% 0%,
-    var(--accent-hi) 0%,
-    var(--accent) 42%,
-    var(--accent-deep) 110%
-  );
+  background:
+    radial-gradient(
+      90% 130% at 12% 0%,
+      var(--saffron) 0%,
+      color-mix(in srgb, var(--saffron-deep) 70%, transparent) 42%,
+      transparent 72%
+    ),
+    linear-gradient(112deg, var(--saffron-deep) 0%, var(--accent) 52%, var(--accent-deep) 100%);
 }
 
 .band .btn {
@@ -1937,7 +1965,7 @@ td.win {
 }
 
 .stages::before {
-  background: linear-gradient(to bottom, var(--accent), var(--sky));
+  background: linear-gradient(to bottom, var(--saffron), var(--accent) 60%, var(--accent-deep));
 }
 
 /* ---- hero terminal ------------------------------------------------------ */

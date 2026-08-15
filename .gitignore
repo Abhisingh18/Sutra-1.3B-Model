@@ -1,0 +1,39 @@
+# Model weights -- 109 GB, and GitHub caps files at 100 MB.
+# Published instead at huggingface.co/Abhisingh-18/Sutra-1.3B-Chat
+/checkpoints/
+
+# Token shards, 93 GB. Regenerate with:
+#   python -m src.data.prepare --out data/tokens --tokens 18e9
+# Leading slash matters: a bare "data/" would also swallow src/data/, which is
+# the pipeline SOURCE and must be committed.
+/data/
+
+# Retrieval indexes. Rebuild with:
+#   python -m src.rag.ingest --docs 60000 --out rag_index_big
+rag_index/
+rag_index_big/
+rag_index_full/
+
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.so
+.Python
+
+# wandb keeps a full local copy of every run; the runs live on wandb.ai
+wandb/
+
+# Training logs are large and specific to one machine. logs_train.txt in
+# particular is 186 KB of step lines that mean nothing outside that run.
+logs_*.txt
+
+# Upload staging
+*.safetensors
+*.pt
+*.bin
+
+.DS_Store
+.idea/
+.vscode/
+*.swp

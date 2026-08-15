@@ -1,0 +1,68 @@
+{
+  "base": {
+    "hellaswag": {
+      "n": 500,
+      "acc": 0.348,
+      "acc_norm": 0.384
+    },
+    "arc_easy": {
+      "n": 500,
+      "acc": 0.478,
+      "acc_norm": 0.45
+    },
+    "piqa": {
+      "n": 500,
+      "acc": 0.63,
+      "acc_norm": 0.626
+    },
+    "winogrande": {
+      "n": 500,
+      "acc": 0.524,
+      "acc_norm": 0.506
+    }
+  },
+  "sft": {
+    "hellaswag": {
+      "n": 500,
+      "acc": 0.344,
+      "acc_norm": 0.398
+    },
+    "arc_easy": {
+      "n": 500,
+      "acc": 0.454,
+      "acc_norm": 0.448
+    },
+    "piqa": {
+      "n": 500,
+      "acc": 0.642,
+      "acc_norm": 0.654
+    },
+    "winogrande": {
+      "n": 500,
+      "acc": 0.514,
+      "acc_norm": 0.49
+    }
+  },
+  "dpo": {
+    "hellaswag": {
+      "n": 500,
+      "acc": 0.352,
+      "acc_norm": 0.404
+    },
+    "arc_easy": {
+      "n": 500,
+      "acc": 0.44,
+      "acc_norm": 0.45
+    },
+    "piqa": {
+      "n": 500,
+      "acc": 0.624,
+      "acc_norm": 0.656
+    },
+    "winogrande": {
+      "n": 500,
+      "acc": 0.514,
+      "acc_norm": 0.49
+    }
+  }
+}

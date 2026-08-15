@@ -1,0 +1,17 @@
+# Install torch first, matched to your CUDA version (12.7 driver here):
+#   pip install torch --index-url https://download.pytorch.org/whl/cu124
+torch>=2.4.0
+
+tokenizers>=0.20.0
+datasets>=3.0.0
+numpy>=1.26.0
+tqdm>=4.66.0
+
+# Optional but recommended
+wandb>=0.18.0            # loss curves you can watch from your phone
+zstandard>=0.22.0        # several HF dumps ship as .zst
+pyarrow>=17.0.0
+
+# Optional: FlashAttention. PyTorch's scaled_dot_product_attention already
+# dispatches to a fused kernel, so this is a speedup, not a requirement.
+# flash-attn>=2.6.0

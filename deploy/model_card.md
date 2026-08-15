@@ -1,0 +1,147 @@
+---
+license: apache-2.0
+language:
+  - en
+  - hi
+library_name: pytorch
+pipeline_tag: text-generation
+tags:
+  - mixture-of-experts
+  - moe
+  - mla
+  - from-scratch
+  - custom-architecture
+---
+
+# Sutra-1.3B
+
+A 1.32B-parameter Mixture-of-Experts language model **trained from scratch** —
+own tokenizer, own data pipeline, own training loop. No pretrained weights, no
+`transformers` Trainer anywhere in the stack.
+
+## Quick start
+
+```bash
+pip install torch tokenizers huggingface_hub
+wget https://huggingface.co/Abhisingh-18/Sutra-1.3B-Chat/resolve/main/inference.py
+python inference.py "Explain photosynthesis in three sentences."
+```
+
+That downloads the weights (5.3 GB) and the architecture code and runs. It
+works on CPU — because only 0.28B parameters are active per token, CPU
+generation runs at about **10 tokens/second on 2 cores**.
+
+Interactive:
+
+```bash
+python inference.py
+```
+
+In Python:
+
+```python
+from inference import build, generate
+model, mcfg, tok, device = build()
+print(generate(model, mcfg, tok, device, "What is machine learning?"))
+```
+
+> **Note:** this is a custom architecture (MoE + Multi-head Latent Attention),
+> so `AutoModelForCausalLM.from_pretrained` will **not** work. Use
+> `inference.py`, which carries the model code.
+
+## Repository layout
+
+```
+├── model.safetensors        default weights — the DPO stage, 5.3 GB
+├── config.json              architecture
+├── tokenizer.json           48k BPE, English + Devanagari
+├── inference.py             run the model
+├── src/                     model code (custom arch — see note above)
+└── checkpoints/             every training stage, for comparison
+    ├── base_pretrained.pt
+    ├── sft_epoch_0.pt
+    ├── sft_epoch_1.pt
+    ├── sft_epoch_2.pt
+    └── dpo_epoch_0.pt
+```
+
+The root holds what you need to run the model. `checkpoints/` is the archive of
+each stage, so you can hear the difference each one made instead of taking it
+on faith.
+
+| Checkpoint | Stage | Worth loading for |
+|---|---|---|
+| `base_pretrained.pt` | 18B tokens, no fine-tuning | Text *continuation*. It continues your prompt rather than answering it — the clearest demonstration of what SFT actually does |
+| `sft_epoch_0.pt` | SFT, 1 epoch | Comparison |
+| `sft_epoch_1.pt` | SFT, 2 epochs | Comparison |
+| `sft_epoch_2.pt` | SFT, 3 epochs | Best held-out loss of the three (1.7033) — no overfitting |
+| `dpo_epoch_0.pt` | DPO on top of SFT | Same weights as `model.safetensors` |
+
+Optimizer state is stripped from all of them, so each is 5.3 GB rather than
+15.8 GB. They are for inference, not for resuming training.
+
+To load a different stage:
+
+```bash
+SUTRA_CKPT=checkpoints/base_pretrained.pt python inference.py "The capital of France is"
+```
+
+## Architecture
+
+| | |
+|---|---|
+| Parameters | 1.32B total / **0.28B active** (4.7x sparsity) |
+| Experts | 48 routed + 1 shared, top-4 |
+| Routing | sigmoid scoring, bias-based load balancing |
+| Attention | **MLA** (Multi-head Latent Attention), kv_lora_rank 256 |
+| Layers | 16 (layer 0 dense, 1-15 MoE) |
+| d_model | 1024 |
+| Context | 4096 |
+| Vocab | 48,000 (English + Devanagari) |
+
+## Training
+
+| Stage | Data | Compute |
+|---|---|---|
+| Pretraining | 18B tokens (English, Hindi, code, math) | 4x RTX 6000 Ada, 4d 9h |
+| SFT | 200K conversations | 18h |
+| DPO | 100K preference pairs | 6h |
+
+Pretraining held-out perplexity **15.00**; SFT held-out perplexity **5.49**.
+
+## Evaluation
+
+Log-likelihood scoring, 500 examples per task, length-normalised accuracy.
+
+| Task | Random | Base | SFT | DPO |
+|---|---|---|---|---|
+| HellaSwag | 25.0 | 38.4 | 39.8 | **40.4** |
+| ARC-easy | 25.0 | 45.0 | 44.8 | **45.0** |
+| PIQA | 50.0 | 62.6 | 65.4 | **65.6** |
+| WinoGrande | 50.0 | 50.6 | 49.0 | 49.0 |
+
+Two things worth reading honestly here. ARC-easy and PIQA sit well above chance,
+so the model learned real commonsense and not just fluent grammar. WinoGrande
+sits *at* chance, which is the clearest signal of what 0.28B active parameters
+cannot buy: the pronoun-resolution reasoning that task measures never appeared.
+
+DPO's held-out preference accuracy came out at **47.5%** against a 50% baseline,
+so the alignment stage did not generalise — the 66% reported during training was
+measured on training batches. The SFT and DPO checkpoints perform about equally.
+
+## Limitations
+
+Trained on 18B tokens — roughly **500x less** than comparable 1B models such as
+Llama 3.2 1B (9T tokens). Concretely:
+
+- Writes fluent English and follows formatting instructions well
+- Does **not** reliably recall facts, and states wrong ones confidently
+- Does **not** do multi-step reasoning or write working code
+- Sensitive to phrasing — a typo or a terse prompt derails it, where a larger
+  model would recover
+
+Pair it with retrieval for anything knowledge-dependent.
+
+## License
+
+Apache 2.0.

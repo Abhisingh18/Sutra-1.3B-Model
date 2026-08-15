@@ -1853,3 +1853,95 @@ header {
     margin-top: 48px;
   }
 }
+
+/* ---- shared across routes ----------------------------------------------- */
+
+.authwrap {
+  position: relative;
+  isolation: isolate;
+}
+
+/* The auth page is centred vertically, so its wash sits shorter and softer
+   than the landing one -- at full strength it would swallow the card. */
+.wash.auth {
+  height: 420px;
+  opacity: 0.62;
+}
+
+.pill.wide {
+  display: flex;
+  width: 100%;
+  padding: 13px 24px;
+  font-size: 15px;
+}
+
+.pill.dark:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.ornament.small {
+  margin-bottom: 14px;
+  font-size: 20px;
+  color: color-mix(in srgb, var(--accent) 62%, var(--muted));
+}
+
+/* The chat hero is left-aligned, unlike the landing and auth ones. */
+.hero .ornament.small {
+  display: inline-block;
+}
+
+/* ---- landing sections below the fold ------------------------------------ */
+
+/* Numbered stages get a rule down the left, so the column of numbers reads as
+   a sequence rather than four unrelated rows. */
+.stages {
+  position: relative;
+  padding-left: 4px;
+}
+
+.stages::before {
+  content: "";
+  position: absolute;
+  left: 20px;
+  top: 26px;
+  bottom: 26px;
+  width: 1px;
+  background: linear-gradient(
+    to bottom,
+    var(--accent),
+    color-mix(in srgb, var(--blue) 60%, transparent)
+  );
+}
+
+.num {
+  position: relative;
+  z-index: 1;
+  background: var(--bg);
+  padding: 3px 0 6px;
+}
+
+/* Results table: tint the winning column so the eye lands on it without
+   needing to read the header. */
+tbody td:last-child {
+  background: color-mix(in srgb, var(--accent-soft) 65%, transparent);
+}
+
+thead th:last-child {
+  background: color-mix(in srgb, var(--accent-soft) 65%, transparent);
+}
+
+/* Section headings pick up a small saffron rule above them. */
+.lsec > h2::before {
+  content: "";
+  display: block;
+  width: 34px;
+  height: 2px;
+  margin-bottom: 18px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), var(--blue));
+}
+
+.cend > h2::before {
+  margin-inline: auto;
+}

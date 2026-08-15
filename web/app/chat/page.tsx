@@ -299,6 +299,9 @@ export default function Home() {
         <main className={empty ? "centered" : ""}>
           {empty ? (
             <div className="hero">
+              <span className="ornament small" aria-hidden="true">
+                ❦
+              </span>
               <h1>
                 Trained from scratch.
                 <br />

@@ -32,6 +32,10 @@ export default function LoginClient({
 
   return (
     <div className="authwrap">
+      {/* Same wash as the landing fold, so signing in does not feel like a
+          different product. */}
+      <div className="wash auth" aria-hidden="true" />
+
       <Link href="/" className="backhome">
         &larr; Sutra
       </Link>
@@ -43,7 +47,7 @@ export default function LoginClient({
           <>
             <h1>Signed in as {profile.name}</h1>
             <p>Your saved chats are kept under this profile on this browser.</p>
-            <Link href="/chat" className="cta wide">
+            <Link href="/chat" className="pill dark wide">
               Go to the chat
             </Link>
             <button
@@ -102,7 +106,7 @@ export default function LoginClient({
                 placeholder={profiles.length ? "Add another name" : "Just a name"}
                 maxLength={32}
               />
-              <button type="submit" className="cta" disabled={!name.trim()}>
+              <button type="submit" className="pill dark" disabled={!name.trim()}>
                 Continue
               </button>
             </form>

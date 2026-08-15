@@ -6,10 +6,7 @@ import { Markdown } from "../markdown";
 import { SidebarAccount } from "../authbutton";
 import { useProfile } from "../profile";
 
-// Set in Vercel: Settings -> Environment Variables. This is the cloudflared
-// URL printed by deploy/server.py's tunnel, and it changes on every restart
-// unless you use a named tunnel.
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { backendUrl, forgetBackend } from "../backend";
 const STORE_BASE = "sutra.chats.v1";
 
 type Src = { score: number; text: string; name: string };
@@ -79,12 +76,17 @@ export default function Home() {
   // once: a stale "online" badge is worse than no badge.
   useEffect(() => {
     const ping = () =>
-      fetch(`${API}/health`)
+      backendUrl().then((api) => fetch(`${api}/health`))
         .then(async (r) => {
           setOnline(r.ok);
           if (r.ok) setCanUpload(Boolean((await r.json()).upload));
         })
-        .catch(() => setOnline(false));
+        .catch(() => {
+          // A dead hostname is the usual cause; drop it so the next poll
+          // re-reads backend.json and can recover on its own.
+          forgetBackend();
+          setOnline(false);
+        });
     ping();
     const t = setInterval(ping, 30000);
     return () => clearInterval(t);
@@ -154,7 +156,7 @@ export default function Home() {
     setBusy(true);
 
     try {
-      const res = await fetch(`${API}/chat`, {
+      const res = await fetch(`${await backendUrl()}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -214,7 +216,7 @@ export default function Home() {
     try {
       const fd = new FormData();
       fd.append("file", f);
-      const r = await fetch(`${API}/upload`, { method: "POST", body: fd });
+      const r = await fetch(`${await backendUrl()}/upload`, { method: "POST", body: fd });
       const d = await r.json();
       if (!r.ok) throw new Error(d.detail || "upload failed");
       setDoc({ id: d.doc_id, name: d.name, chunks: d.chunks });

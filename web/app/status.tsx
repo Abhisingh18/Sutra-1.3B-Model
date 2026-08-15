@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import { backendUrl, forgetBackend } from "./backend";
 
 /* Live model status for the landing nav.
  *
@@ -20,9 +20,13 @@ export function ModelStatus() {
   useEffect(() => {
     let alive = true;
     const ping = () =>
-      fetch(`${API}/health`, { cache: "no-store" })
+      backendUrl()
+        .then((api) => fetch(`${api}/health`, { cache: "no-store" }))
         .then((r) => alive && setUp(r.ok))
-        .catch(() => alive && setUp(false));
+        .catch(() => {
+          forgetBackend();
+          if (alive) setUp(false);
+        });
     ping();
     const t = setInterval(ping, 30000);
     return () => {

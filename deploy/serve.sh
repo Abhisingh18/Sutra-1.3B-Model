@@ -50,7 +50,10 @@ start_tunnel() {
   if [ -n "${URL:-}" ]; then
     echo "$URL" >"$ROOT/deploy/tunnel_url.txt"
     say "tunnel URL: $URL"
-    say "  -> set NEXT_PUBLIC_API_URL to this in Vercel, then redeploy"
+    # Publish it so the site picks the new address up on its own. Without this
+    # every tunnel restart needs a Vercel redeploy, which is the surest way to
+    # end up pointing at a dead hostname.
+    bash "$ROOT/deploy/publish_url.sh" "$URL" 2>&1 | tee -a "$LOG"
   else
     say "tunnel did not report a URL; will retry"
   fi

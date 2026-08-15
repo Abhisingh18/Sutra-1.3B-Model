@@ -35,3 +35,6 @@ logs_*.txt
 .idea/
 .vscode/
 *.swp
+
+# Server-side token used by deploy/publish_url.sh; never in the repo
+.sutra_gh_token

@@ -33,10 +33,11 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [online, setOnline] = useState<boolean | null>(null);
-  // On by default: without retrieved context the model answers confidently
-  // from nothing, and at 0.28B active parameters those answers are usually
-  // wrong. The toggle stays visible so the difference is easy to see.
-  const [rag, setRag] = useState(true);
+  // Off by default until retrieval coverage improves. Measured recall@3 on the
+  // current index is 50%, and a miss is worse than no context at all: asked
+  // "what is light" it retrieved a plant passage and answered about plants,
+  // where with no context it at least stayed on topic.
+  const [rag, setRag] = useState(false);
   const [hasRag, setHasRag] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
@@ -81,7 +82,7 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: text,
-          max_tokens: 200,
+          max_tokens: 512,
           temperature: 0.5,
           rag: rag && hasRag,
         }),

@@ -47,7 +47,7 @@ STATE = {}
 
 class ChatRequest(BaseModel):
     message: str
-    max_tokens: int = 160
+    max_tokens: int = 512
     temperature: float = 0.5
     rag: bool = False
 

@@ -14,6 +14,14 @@
 
 const FALLBACK = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+/* Read straight from the repo rather than from this deployment. The file in
+ * web/public only changes when Vercel rebuilds, so a tunnel restart left the
+ * site pointing at a dead hostname for as long as the build took. The raw
+ * endpoint updates the moment the supervisor commits, and serves
+ * Access-Control-Allow-Origin: * so the browser can read it. */
+const LIVE =
+  "https://raw.githubusercontent.com/Abhisingh18/Sutra-1.3B-Model/main/web/public/backend.json";
+
 let cached: string | null = null;
 let inflight: Promise<string> | null = null;
 
@@ -27,8 +35,9 @@ export function backendUrl(): Promise<string> {
 
   // Resolved through a local so the promise stays Promise<string>; returning
   // the nullable `cached` widens it and the build rejects it.
-  inflight = fetch("/backend.json", { cache: "no-store" })
-    .then((r) => (r.ok ? r.json() : null))
+  inflight = fetch(LIVE, { cache: "no-store" })
+    .catch(() => fetch("/backend.json", { cache: "no-store" }))
+    .then((r) => (r && r.ok ? r.json() : null))
     .then((d: { url?: unknown } | null) => {
       const found =
         d && typeof d.url === "string" && d.url ? clean(d.url) : clean(FALLBACK);

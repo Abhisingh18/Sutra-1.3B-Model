@@ -81,6 +81,7 @@ cleanup() {
 trap cleanup INT TERM
 
 FAILS=0
+TFAILS=0
 
 start_server
 start_tunnel
@@ -120,5 +121,27 @@ while true; do
     kill "${SERVER_PID:-0}" 2>/dev/null
     sleep 3
     start_server
+    continue
+  fi
+
+  # The server can be healthy while the tunnel is not. A quick tunnel
+  # sometimes hangs after its preflight without ever registering, leaving a
+  # live process and a hostname that resolves to nothing -- which looks
+  # identical to "model offline" from the browser.
+  PUBLIC=$(cat "$ROOT/deploy/tunnel_url.txt" 2>/dev/null || true)
+  if [ -n "$PUBLIC" ]; then
+    if ! curl -fsS -m 20 "$PUBLIC/health" >/dev/null 2>&1; then
+      TFAILS=$((TFAILS + 1))
+      say "tunnel unreachable at $PUBLIC ($TFAILS/2)"
+      if [ "$TFAILS" -ge 2 ]; then
+        say "restarting tunnel"
+        kill "${TUNNEL_PID:-0}" 2>/dev/null
+        sleep 3
+        start_tunnel
+        TFAILS=0
+      fi
+    else
+      TFAILS=0
+    fi
   fi
 done

@@ -23,6 +23,10 @@ const sans = Inter({
 });
 
 export const metadata: Metadata = {
+  // Light only. Without this the browser still paints dark UI chrome around a
+  // light page on a device set to dark.
+  themeColor: "#ffffff",
+  colorScheme: "light",
   title: "Sutra-1.3B",
   description:
     "A 1.32B-parameter Mixture-of-Experts language model trained from scratch on 18B tokens.",

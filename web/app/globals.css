@@ -5,6 +5,8 @@
  * the gradient end without a visible seam, which pure white does not.
  */
 :root {
+  color-scheme: light;
+
   --ink: #1a1614;
   --fg: #1a1614;
   --fg-soft: #4a423d;
@@ -33,34 +35,9 @@
   --aside: 260px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --ink: #f6f2ec;
-    --fg: #f6f2ec;
-    --fg-soft: #cfc7bd;
-    --muted: #8f867d;
-    --cream: #100d0b;
-    --bg: #100d0b;
-    --surface: #191512;
-    --raised: #1f1a16;
-
-    --accent: #ff9040;
-    --accent-hi: #ffab68;
-    --accent-deep: #ff7a1a;
-    --accent-soft: #2a1a0e;
-
-    --blue: #9aa2ee;
-    --blue-hi: #b3b9f3;
-    --blue-soft: #171a2e;
-    --lav: #6f76bd;
-
-    --pill-dark: #f6f2ec;
-    --line: rgba(246, 242, 236, 0.14);
-    --line-soft: rgba(246, 242, 236, 0.08);
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 30px rgba(0, 0, 0, 0.4);
-  }
-}
-
+/* No dark scheme. The palette is a sunrise on white; there is no honest
+   dark counterpart to it, and a machine-translated one looked like a
+   different product. */
 * {
   box-sizing: border-box;
 }

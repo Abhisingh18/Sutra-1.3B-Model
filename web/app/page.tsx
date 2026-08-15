@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { ModelStatus } from "./status";
+
 /* Landing page. A server component with no client JavaScript -- it is static
  * content, and shipping a React bundle to render prose would slow the first
  * thing anyone sees for no gain. The chat app lives at /chat.
@@ -62,6 +64,7 @@ export default function Landing() {
             <a href="https://github.com/Abhisingh18/Sutra-1.3B-Model">Code</a>
           </div>
           <div className="navcta">
+            <ModelStatus />
             <Link href="/chat" className="btn btn-dark">
               Try it
             </Link>

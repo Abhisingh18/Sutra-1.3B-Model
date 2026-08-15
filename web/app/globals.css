@@ -2109,3 +2109,42 @@ td.win {
     padding-inline: 14px;
   }
 }
+
+/* ---- model status in the nav -------------------------------------------- */
+
+.navstatus {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-right: 6px;
+  color: var(--muted);
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+.navstatus i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.navstatus.up i {
+  background: #15803d;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #15803d 20%, transparent);
+}
+
+.navstatus.down i {
+  background: #b91c1c;
+  box-shadow: 0 0 0 3px color-mix(in srgb, #b91c1c 18%, transparent);
+}
+
+/* On narrow screens the words go and the dot stays -- it is the part that
+   carries the information. */
+@media (max-width: 640px) {
+  .navstatus {
+    font-size: 0;
+    gap: 0;
+    margin-right: 10px;
+  }
+}

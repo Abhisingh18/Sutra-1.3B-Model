@@ -55,7 +55,39 @@ body {
   padding: 0;
 }
 
+/* The wash belongs to the page, not to the hero. On the hero it began below
+   the nav, leaving a full-width white band across the top of the window. Here
+   it starts at the first pixel and runs behind everything. */
+body:has(.topbar)::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 auto;
+  height: 760px;
+  background:
+    radial-gradient(
+      110% 58% at 26% -10%,
+      color-mix(in srgb, var(--saffron) 30%, transparent) 0%,
+      color-mix(in srgb, var(--saffron-hi) 15%, transparent) 34%,
+      transparent 66%
+    ),
+    radial-gradient(
+      110% 62% at 76% -4%,
+      color-mix(in srgb, var(--accent-hi) 28%, transparent) 0%,
+      color-mix(in srgb, var(--sky) 20%, transparent) 38%,
+      transparent 70%
+    ),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--sky-soft) 70%, var(--saffron-soft)) 0%,
+      transparent 62%
+    );
+  pointer-events: none;
+}
+
 body {
+  position: relative;
+  isolation: isolate;
   background: var(--bg);
   color: var(--fg);
   font: 15.5px/1.65 var(--font-sans), ui-sans-serif, system-ui, sans-serif;
@@ -822,29 +854,7 @@ h1,
    where the content does and needs no seam-hiding fade. */
 .hero {
   position: relative;
-  overflow: hidden;
   padding-bottom: 96px;
-  margin-top: 0;
-  /* A tint, not a field. The page reads white first and picks up warmth
-     second. */
-  background:
-    radial-gradient(
-      110% 58% at 26% -14%,
-      color-mix(in srgb, var(--saffron) 30%, transparent) 0%,
-      color-mix(in srgb, var(--saffron-hi) 15%, transparent) 34%,
-      transparent 66%
-    ),
-    radial-gradient(
-      110% 62% at 76% -8%,
-      color-mix(in srgb, var(--accent-hi) 28%, transparent) 0%,
-      color-mix(in srgb, var(--sky) 20%, transparent) 38%,
-      transparent 70%
-    ),
-    linear-gradient(
-      180deg,
-      color-mix(in srgb, var(--sky-soft) 70%, var(--saffron-soft)) 0%,
-      transparent 56%
-    );
 }
 
 /* Three columns, not space-between. With space-between the centre group

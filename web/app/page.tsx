@@ -3,17 +3,29 @@
 import { useEffect, useRef, useState } from "react";
 
 // Set in Vercel: Settings -> Environment Variables. This is the cloudflared
-// URL printed by `deploy/server.py`'s tunnel, and it changes each time the
-// tunnel restarts unless you use a named tunnel.
+// URL printed by deploy/server.py's tunnel, and it changes on every restart
+// unless you use a named tunnel.
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 type Msg = { role: "user" | "assistant"; text: string };
 
 const EXAMPLES = [
-  "Write a short email to my manager asking for two days of leave.",
-  "Explain photosynthesis in three sentences.",
-  "What is machine learning?",
-  "List five healthy breakfast foods.",
+  {
+    title: "Write an email",
+    body: "Write a short email to my manager asking for two days of leave.",
+  },
+  {
+    title: "Explain a concept",
+    body: "Explain photosynthesis in three sentences.",
+  },
+  {
+    title: "Summarise a topic",
+    body: "What is machine learning?",
+  },
+  {
+    title: "Make a list",
+    body: "List five healthy breakfast foods.",
+  },
 ];
 
 export default function Home() {
@@ -22,23 +34,36 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
   const [online, setOnline] = useState<boolean | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
+  const taRef = useRef<HTMLTextAreaElement>(null);
 
-  // The backend runs on someone's workstation behind a tunnel, so "is it up"
-  // is a real question the UI has to answer -- otherwise a dead tunnel looks
-  // identical to a slow model.
+  // The backend runs on a workstation behind a tunnel, so "is it up" is a real
+  // question the UI must answer -- a dead tunnel otherwise looks identical to a
+  // slow model.
   useEffect(() => {
-    fetch(`${API}/health`)
-      .then((r) => setOnline(r.ok))
-      .catch(() => setOnline(false));
+    const ping = () =>
+      fetch(`${API}/health`)
+        .then((r) => setOnline(r.ok))
+        .catch(() => setOnline(false));
+    ping();
+    const t = setInterval(ping, 30000);
+    return () => clearInterval(t);
   }, []);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [msgs]);
 
+  function grow() {
+    const ta = taRef.current;
+    if (!ta) return;
+    ta.style.height = "auto";
+    ta.style.height = Math.min(ta.scrollHeight, 200) + "px";
+  }
+
   async function send(text: string) {
     if (!text.trim() || busy) return;
     setInput("");
+    if (taRef.current) taRef.current.style.height = "auto";
     setMsgs((m) => [...m, { role: "user", text }, { role: "assistant", text: "" }]);
     setBusy(true);
 
@@ -46,7 +71,7 @@ export default function Home() {
       const res = await fetch(`${API}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, max_tokens: 160, temperature: 0.5 }),
+        body: JSON.stringify({ message: text, max_tokens: 200, temperature: 0.5 }),
       });
       if (!res.body) throw new Error("no stream");
 
@@ -58,8 +83,8 @@ export default function Home() {
         const { done, value } = await reader.read();
         if (done) break;
         buf += dec.decode(value, { stream: true });
-        // SSE frames are separated by a blank line; a chunk can split one in
-        // half, so keep the remainder in the buffer.
+        // SSE frames are separated by a blank line, and a network chunk can
+        // split one in half -- keep the remainder for the next round.
         const frames = buf.split("\n\n");
         buf = frames.pop() || "";
         for (const f of frames) {
@@ -82,7 +107,7 @@ export default function Home() {
         const c = [...m];
         c[c.length - 1] = {
           role: "assistant",
-          text: "Could not reach the model server. It runs on a workstation behind a tunnel and may be offline.",
+          text: "Could not reach the model server. It runs on a workstation behind a tunnel and may be offline right now.",
         };
         return c;
       });
@@ -91,67 +116,94 @@ export default function Home() {
     }
   }
 
+  const empty = msgs.length === 0;
+
   return (
-    <main>
-      <header>
-        <h1>Sutra-1.3B</h1>
-        <p className="sub">
-          A 1.32B-parameter Mixture-of-Experts model trained from scratch on 18B
-          tokens. 0.28B parameters active per token.
-        </p>
-        <div className="links">
+    <div className="shell">
+      <nav>
+        <div className="brand">
+          <span className="mark">स</span>
+          <span className="name">Sutra</span>
+          <span className="badge">1.3B</span>
+        </div>
+        <div className="navlinks">
+          <span className={`status ${online ? "up" : online === false ? "down" : ""}`}>
+            <i /> {online === null ? "checking" : online ? "online" : "offline"}
+          </span>
           <a href="https://github.com/Abhisingh18/Sutra-1.3B-Model">GitHub</a>
           <a href="https://huggingface.co/Abhisingh-18/Sutra-1.3B-Chat">Weights</a>
-          <span className={`dot ${online === null ? "" : online ? "up" : "down"}`} />
-          <span className="status">
-            {online === null ? "checking" : online ? "online" : "offline"}
-          </span>
         </div>
-      </header>
+      </nav>
 
-      <div className="chat">
-        {msgs.length === 0 && (
-          <div className="empty">
-            <p>Try one of these — it responds best to full, explicit sentences.</p>
-            {EXAMPLES.map((e) => (
-              <button key={e} onClick={() => send(e)} className="example">
-                {e}
-              </button>
-            ))}
-          </div>
-        )}
-        {msgs.map((m, i) => (
-          <div key={i} className={`msg ${m.role}`}>
-            <div className="bubble">
-              {m.text || <span className="cursor">▍</span>}
+      <main className={empty ? "centered" : ""}>
+        {empty ? (
+          <div className="hero">
+            <h1>
+              Trained from scratch.
+              <br />
+              <span className="dim">Ask it anything.</span>
+            </h1>
+            <p className="lede">
+              A 1.32B-parameter Mixture-of-Experts model pretrained on 18B tokens,
+              then tuned with SFT and DPO. Only 0.28B parameters run per token.
+            </p>
+            <div className="cards">
+              {EXAMPLES.map((e) => (
+                <button key={e.body} className="card" onClick={() => send(e.body)}>
+                  <strong>{e.title}</strong>
+                  <span>{e.body}</span>
+                </button>
+              ))}
             </div>
           </div>
-        ))}
-        <div ref={endRef} />
+        ) : (
+          <div className="thread">
+            {msgs.map((m, i) => (
+              <div key={i} className={`turn ${m.role}`}>
+                <div className="who">{m.role === "user" ? "You" : "Sutra"}</div>
+                <div className="body">
+                  {m.text || <span className="dots"><i /><i /><i /></span>}
+                </div>
+              </div>
+            ))}
+            <div ref={endRef} />
+          </div>
+        )}
+      </main>
+
+      <div className="composer-wrap">
+        <form
+          className="composer"
+          onSubmit={(e) => {
+            e.preventDefault();
+            send(input);
+          }}
+        >
+          <textarea
+            ref={taRef}
+            value={input}
+            rows={1}
+            placeholder="Ask Sutra anything…"
+            onChange={(e) => {
+              setInput(e.target.value);
+              grow();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send(input);
+              }
+            }}
+          />
+          <button type="submit" disabled={busy || !input.trim()} aria-label="Send">
+            {busy ? <span className="spin" /> : "↑"}
+          </button>
+        </form>
+        <p className="disclaimer">
+          Trained on 18B tokens — about 500x less than comparable 1B models. It
+          writes fluently but does not reliably know facts.
+        </p>
       </div>
-
-      <form
-        className="composer"
-        onSubmit={(e) => {
-          e.preventDefault();
-          send(input);
-        }}
-      >
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask something…"
-          disabled={busy}
-        />
-        <button type="submit" disabled={busy || !input.trim()}>
-          {busy ? "…" : "Send"}
-        </button>
-      </form>
-
-      <footer>
-        Trained on 18B tokens — roughly 500x less than comparable 1B models. It
-        writes fluently but does not reliably know facts.
-      </footer>
-    </main>
+    </div>
   );
 }

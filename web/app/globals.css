@@ -1,56 +1,63 @@
-/* Saffron and indigo on near-white.
+/* Sunrise: saturated orange at the crown falling through peach into lavender,
+ * landing on cream. Ink and indigo carry the type.
  *
- * Two accents rather than one, kept in strict roles: saffron carries anything
- * the reader acts on -- buttons, links, list markers, the active chat -- and
- * indigo carries structure and secondary emphasis. Mixing the two freely is
- * what makes a two-colour palette look accidental, so gradients are the only
- * place they meet.
+ * The base is cream rather than white on purpose -- a warm ground is what lets
+ * the gradient end without a visible seam, which pure white does not.
  */
 :root {
-  --bg: #ffffff;
+  --ink: #1a1614;
+  --fg: #1a1614;
+  --fg-soft: #4a423d;
+  --muted: #857b74;
+  --cream: #fdfaf6;
+  --bg: #fdfaf6;
   --surface: #ffffff;
-  --raised: #f7f8fa;
-  --fg: #14161c;
-  --fg-soft: #454b5a;
-  --muted: #7d8598;
-  --line: #e6e9f0;
-  --line-soft: #f0f2f6;
+  --raised: #f7f2ea;
 
-  --accent: #e8871e;
-  --accent-hi: #ff9d33;
-  --accent-soft: #fff5e9;
+  --accent: #ff7a1a;
+  --accent-hi: #ff9d4a;
+  --accent-deep: #f45d00;
+  --accent-soft: #ffe6cf;
 
-  --blue: #2f4d9b;
-  --blue-hi: #4468c4;
-  --blue-soft: #eef2fc;
+  --blue: #3730a3;
+  --blue-hi: #5b52c9;
+  --blue-soft: #e5e8fb;
+  --lav: #c7cdf5;
 
-  --shadow: 0 1px 2px rgba(20, 22, 28, 0.05), 0 10px 28px rgba(20, 22, 28, 0.06);
-  --radius: 14px;
+  --pill-dark: #241d1a;
+  --line: rgba(26, 22, 20, 0.12);
+  --line-soft: rgba(26, 22, 20, 0.07);
+
+  --shadow: 0 1px 2px rgba(26, 22, 20, 0.04), 0 10px 30px rgba(244, 93, 0, 0.07);
+  --radius: 24px;
   --aside: 260px;
 }
 
-/* The default theme setting stamps nothing on the root element, so dark has
-   to key off prefers-color-scheme as well as an explicit choice. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0b0d12;
-    --surface: #12151c;
-    --raised: #171b24;
-    --fg: #f2f4f8;
-    --fg-soft: #c3c9d6;
-    --muted: #838b9d;
-    --line: #232833;
-    --line-soft: #1c202a;
+    --ink: #f6f2ec;
+    --fg: #f6f2ec;
+    --fg-soft: #cfc7bd;
+    --muted: #8f867d;
+    --cream: #100d0b;
+    --bg: #100d0b;
+    --surface: #191512;
+    --raised: #1f1a16;
 
-    --accent: #ffa544;
-    --accent-hi: #ffb867;
-    --accent-soft: #241a0e;
+    --accent: #ff9040;
+    --accent-hi: #ffab68;
+    --accent-deep: #ff7a1a;
+    --accent-soft: #2a1a0e;
 
-    --blue: #7f9ce8;
-    --blue-hi: #9db3f0;
-    --blue-soft: #141a2b;
+    --blue: #9aa2ee;
+    --blue-hi: #b3b9f3;
+    --blue-soft: #171a2e;
+    --lav: #6f76bd;
 
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 8px 24px rgba(0, 0, 0, 0.35);
+    --pill-dark: #f6f2ec;
+    --line: rgba(246, 242, 236, 0.14);
+    --line-soft: rgba(246, 242, 236, 0.08);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 10px 30px rgba(0, 0, 0, 0.4);
   }
 }
 
@@ -807,377 +814,356 @@ main.centered {
   }
 }
 
+
 /* ========================================================================== */
-/* landing page                                                                */
+/* landing                                                                     */
 /* ========================================================================== */
 
-.land {
-  position: relative;
-  isolation: isolate;
-  max-width: 1080px;
+.wrap {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px 64px;
-}
-
-/* Full-bleed wash behind the fold: saturated saffron at the crown, falling
-   through periwinkle into the page background. Escapes the centred column
-   with a viewport-width trick so it reaches both edges. */
-.wash {
-  position: absolute;
-  z-index: -1;
-  top: 0;
-  left: 50%;
-  width: 100vw;
-  height: 540px;
-  transform: translateX(-50%);
-  /* Tinted, not saturated. The page reads white first and picks up colour
-     second -- a full-strength wash made every section below it look grey by
-     comparison, which is the usual cost of a loud fold. */
-  background:
-    radial-gradient(
-      ellipse 56% 64% at 50% -22%,
-      color-mix(in srgb, var(--accent) 13%, transparent) 0%,
-      color-mix(in srgb, var(--accent) 5%, transparent) 40%,
-      transparent 66%
-    ),
-    radial-gradient(
-      ellipse 84% 52% at 50% 14%,
-      color-mix(in srgb, var(--blue) 6%, transparent) 0%,
-      transparent 68%
-    ),
-    linear-gradient(180deg, transparent 46%, var(--bg) 86%);
-  pointer-events: none;
-}
-
-.lnav {
-  position: sticky;
-  top: 14px;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  margin-top: 18px;
-  padding: 9px 9px 9px 22px;
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--surface) 72%, transparent);
-  backdrop-filter: blur(18px) saturate(140%);
-  box-shadow: 0 2px 20px rgba(20, 22, 28, 0.07);
-}
-
-.navactions {
-  display: flex;
-  gap: 8px;
-}
-
-.lnavlinks {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-  font-size: 14px;
-}
-
-.lnavlinks a {
-  color: var(--muted);
-  text-decoration: none;
-}
-
-.lnavlinks a:hover {
-  color: var(--fg);
-}
-
-.cta {
-  padding: 10px 20px;
-  border-radius: 10px;
-  background: linear-gradient(145deg, var(--accent-hi), var(--accent));
-  color: #fff !important;
-  font-weight: 550;
-  text-decoration: none;
-  box-shadow: 0 1px 2px rgba(23, 21, 15, 0.12);
-  transition: transform 0.15s, filter 0.15s;
-  display: inline-block;
-}
-
-.cta:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.06);
-}
-
-.cta.small {
-  padding: 7px 15px;
-  font-size: 13.5px;
-}
-
-.ghost {
-  padding: 10px 20px;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  color: var(--fg) !important;
-  text-decoration: none;
-  font-weight: 500;
-  display: inline-block;
-}
-
-.ghost:hover {
-  border-color: var(--accent);
-  color: var(--accent) !important;
+  padding: 0 24px;
 }
 
 /* ---- hero --------------------------------------------------------------- */
 
-.lhero {
+/* The sunrise lives on the header, not on a floating layer, so it ends exactly
+   where the content does and needs no seam-hiding fade. */
+.hero {
   position: relative;
-  padding: 96px 0 72px;
-  max-width: 760px;
-  margin: 0 auto;
-  text-align: center;
+  overflow: hidden;
+  padding-bottom: 90px;
+  background: radial-gradient(
+    120% 70% at 50% -10%,
+    var(--accent) 0%,
+    var(--accent) 16%,
+    color-mix(in srgb, var(--accent-hi) 62%, transparent) 33%,
+    color-mix(in srgb, var(--lav) 58%, transparent) 61%,
+    var(--cream) 89%
+  );
 }
 
-/* A single soft wash rather than a busy gradient -- enough to stop the top of
-   the page reading as a blank sheet, not enough to compete with the type. */
-
-.eyebrow {
-  display: inline-block;
-  padding: 5px 13px;
-  margin-bottom: 22px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--surface);
-  color: var(--muted);
-  font-size: 12.5px;
-  letter-spacing: 0.01em;
-}
-
-.lhero h1 {
-  margin: 0;
-  font-size: clamp(42px, 6.6vw, 74px);
-  line-height: 1.04;
-  letter-spacing: -0.025em;
-  /* Deep ink over the wash, the way the reference does it -- a gradient
-     headline on a gradient ground turns to mud. */
-  color: var(--fg);
-}
-
-.grad {
-  background: linear-gradient(104deg, var(--accent-hi), var(--accent) 46%, var(--blue));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.lhero > p {
-  margin: 22px auto 34px;
-  max-width: 56ch;
-  color: var(--fg-soft);
-  font-size: 17px;
-  line-height: 1.62;
-}
-
-.lhero code,
-.lsec code {
-  padding: 1px 6px;
-  background: var(--raised);
-  border: 1px solid var(--line-soft);
-  border-radius: 5px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.88em;
-}
-
-.herocta {
+.lnav {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: 1140px;
+  margin: 18px auto 0;
+  padding: 13px 13px 13px 26px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 999px;
+  box-shadow: 0 8px 30px rgba(244, 93, 0, 0.08);
 }
 
-/* ---- pills -------------------------------------------------------------- */
+.logo {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 600;
+  font-size: 25px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  text-decoration: none;
+}
 
-.pill {
+.logo span {
+  color: var(--accent-deep);
+}
+
+.navlinks {
+  display: flex;
+  gap: 32px;
+}
+
+.navlinks a {
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  opacity: 0.82;
+  transition: opacity 0.2s;
+}
+
+.navlinks a:hover {
+  opacity: 1;
+}
+
+.navcta {
+  display: flex;
+  gap: 10px;
+}
+
+/* ---- buttons ------------------------------------------------------------ */
+
+.btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 9px 20px;
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 500;
-  text-decoration: none;
   border: 1px solid transparent;
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 500;
+  padding: 11px 24px;
+  border-radius: 999px;
+  text-decoration: none;
   white-space: nowrap;
+  transition: transform 0.15s, box-shadow 0.2s, background 0.2s;
 }
 
-.pill.dark {
-  background: #1c2233;
-  color: #fff !important;
-  box-shadow: 0 2px 10px rgba(20, 22, 28, 0.16);
-}
-
-.pill.dark:hover {
-  background: #262e44;
+.btn:hover {
   transform: translateY(-1px);
 }
 
-.pill.light {
+.btn-dark {
+  background: var(--pill-dark);
+  color: var(--cream) !important;
+}
+
+.btn-dark:hover {
+  box-shadow: 0 10px 24px rgba(36, 29, 26, 0.28);
+}
+
+.btn-ghost {
   background: var(--surface);
+  color: var(--ink) !important;
   border-color: var(--line);
-  color: var(--fg) !important;
 }
 
-.pill.light:hover {
-  border-color: var(--accent);
-  transform: translateY(-1px);
+.btn-ghost:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
-.pill.big {
-  padding: 13px 30px;
-  font-size: 15px;
-}
+/* ---- hero content ------------------------------------------------------- */
 
-/* ---- ornament + eyebrow ------------------------------------------------- */
+.hero-inner {
+  text-align: center;
+  padding-top: 66px;
+}
 
 .ornament {
+  color: #fff;
+  font-size: 24px;
+  letter-spacing: 6px;
+  opacity: 0.92;
+  margin-bottom: 18px;
+}
+
+.ornament .rule {
   display: block;
-  margin-bottom: 20px;
-  color: color-mix(in srgb, var(--accent) 70%, var(--muted));
-  font-size: 26px;
-  line-height: 1;
-}
-
-/* Hairlines either side of the eyebrow, as a caption rule rather than a
-   badge -- a pill here would fight the pill nav directly above it. */
-.eyebrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-  margin-bottom: 26px;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: none;
-  color: var(--blue);
-  font-size: 13.5px;
-  font-weight: 500;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.eyebrow::before,
-.eyebrow::after {
-  content: "";
-  width: clamp(40px, 12vw, 110px);
+  width: 210px;
   height: 1px;
-  background: color-mix(in srgb, var(--blue) 40%, transparent);
+  margin: 16px auto 0;
+  background: rgba(255, 255, 255, 0.6);
 }
 
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 10px;
-  margin: 72px 0 0;
-  padding: 0;
-  text-align: left;
+.eyebrow {
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 14.5px;
+  margin-bottom: 26px;
 }
 
-.stats div {
-  padding: 18px 20px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-
-.stats dt {
+.hero h1 {
   font-family: var(--font-display), Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(44px, 7vw, 92px);
+  line-height: 1.03;
+  letter-spacing: -0.022em;
+  color: var(--ink);
+  margin: 0;
+}
+
+.sub {
+  margin: 26px auto 0;
+  max-width: 640px;
+  font-size: clamp(16.5px, 2vw, 20px);
+  color: var(--fg-soft);
+  line-height: 1.52;
+}
+
+.hero-cta {
+  display: flex;
+  gap: 13px;
+  justify-content: center;
+  margin-top: 38px;
+}
+
+.hero-cta .btn {
+  padding: 14px 32px;
+  font-size: 15.5px;
+}
+
+/* ---- stat strip --------------------------------------------------------- */
+
+.trust {
+  margin-top: 96px;
+  text-align: center;
+}
+
+.kicker {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-soft);
+  opacity: 0.7;
+  margin-bottom: 32px;
+}
+
+.logos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 34px 58px;
+  align-items: baseline;
+  justify-content: center;
+  margin: 0;
+}
+
+.logos dt {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 600;
   font-size: 34px;
   line-height: 1;
   letter-spacing: -0.02em;
-  color: var(--accent);
+  color: var(--ink);
 }
 
-.stats dd {
-  margin: 3px 0 0;
-  color: var(--muted);
-  font-size: 12.5px;
+.logos div:nth-child(2n) dt {
+  color: var(--accent-deep);
+}
+
+.logos dd {
+  margin: 6px 0 0;
+  color: var(--fg-soft);
+  font-size: 13px;
+  opacity: 0.85;
 }
 
 /* ---- sections ----------------------------------------------------------- */
 
-.lsec {
-  padding: 64px 0;
-  border-top: 1px solid var(--line-soft);
+.platform {
+  padding: 112px 0 40px;
+  text-align: center;
 }
 
-.lsec h2 {
+.platform h2 {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(32px, 5vw, 56px);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
   margin: 0;
-  font-size: clamp(28px, 4vw, 42px);
-  line-height: 1.15;
 }
 
-.lsec .sub {
-  margin: 14px 0 32px;
-  max-width: 62ch;
+.lead {
+  margin: 20px auto 0;
+  max-width: 620px;
   color: var(--fg-soft);
-  font-size: 15.5px;
+  font-size: 18px;
+  line-height: 1.55;
 }
 
-.grid3 {
+.cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 60px;
+  text-align: left;
 }
 
-.grid2 {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 12px;
+.cards.two {
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 900px;
+  margin-inline: auto;
 }
 
-.grid3 article,
-.grid2 article {
-  padding: 22px;
+.card {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  padding: 32px 28px;
+  transition: transform 0.2s, box-shadow 0.25s;
 }
 
-.grid3 h3,
-.grid2 h3 {
-  margin: 0 0 10px;
-  font-size: 16px;
-  font-weight: 620;
-  letter-spacing: -0.015em;
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(244, 93, 0, 0.1);
 }
 
-.grid3 p {
+/* Each dot takes a different gradient, so three identical cards still read as
+   three things rather than one repeated. */
+.dot {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+}
+
+.cards .card:nth-child(2) .dot {
+  background: linear-gradient(135deg, var(--lav), var(--blue));
+}
+
+.cards .card:nth-child(3) .dot {
+  background: linear-gradient(135deg, #ffcf8f, var(--accent));
+}
+
+.card h3 {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 600;
+  font-size: 22px;
+  margin: 0 0 11px;
+  letter-spacing: -0.01em;
+}
+
+.card p {
   margin: 0;
   color: var(--fg-soft);
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 14.5px;
+  line-height: 1.58;
+}
+
+.card ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--fg-soft);
+  font-size: 14.5px;
+  line-height: 1.8;
+}
+
+.can h3 {
+  color: var(--blue);
+}
+
+.cant h3 {
+  color: var(--accent-deep);
 }
 
 /* ---- results table ------------------------------------------------------ */
 
 .tablewrap {
   overflow-x: auto;
+  margin-top: 52px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--surface);
-  box-shadow: var(--shadow);
+  text-align: left;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 14.5px;
-  min-width: 460px;
+  font-size: 15px;
+  min-width: 480px;
 }
 
 th,
 td {
-  padding: 13px 18px;
+  padding: 15px 20px;
   text-align: right;
   border-bottom: 1px solid var(--line-soft);
 }
@@ -1189,10 +1175,10 @@ td:first-child {
 }
 
 thead th {
-  color: var(--muted);
+  color: var(--blue);
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
@@ -1204,34 +1190,49 @@ td.mute {
   color: var(--muted);
 }
 
+td.win,
+thead th:last-child {
+  background: color-mix(in srgb, var(--accent-soft) 45%, transparent);
+}
+
 td.win {
-  color: var(--accent);
-  font-weight: 620;
+  color: var(--accent-deep);
+  font-weight: 600;
 }
 
 .note {
-  margin: 22px 0 0;
-  max-width: 68ch;
+  margin: 24px auto 0;
+  max-width: 70ch;
   color: var(--muted);
-  font-size: 14px;
+  font-size: 14.5px;
   line-height: 1.65;
+  text-align: left;
 }
 
 /* ---- stages ------------------------------------------------------------- */
 
 .stages {
   list-style: none;
-  margin: 0;
+  margin: 52px 0 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  text-align: left;
+  position: relative;
+}
+
+.stages::before {
+  content: "";
+  position: absolute;
+  left: 19px;
+  top: 30px;
+  bottom: 30px;
+  width: 1px;
+  background: linear-gradient(to bottom, var(--accent), var(--blue));
 }
 
 .stages li {
   display: flex;
-  gap: 20px;
-  padding: 22px 0;
+  gap: 22px;
+  padding: 24px 0;
   border-bottom: 1px solid var(--line-soft);
 }
 
@@ -1240,20 +1241,23 @@ td.win {
 }
 
 .num {
+  position: relative;
+  z-index: 1;
   flex: none;
   width: 40px;
-  color: var(--accent);
+  padding: 4px 0 6px;
+  background: var(--bg);
+  color: var(--accent-deep);
   font-size: 13px;
   font-weight: 650;
   letter-spacing: 0.05em;
-  padding-top: 3px;
 }
 
 .stages h3 {
-  margin: 0 0 6px;
-  font-size: 16.5px;
+  font-family: var(--font-display), Georgia, serif;
   font-weight: 600;
-  letter-spacing: -0.015em;
+  font-size: 19px;
+  margin: 0 0 6px;
 }
 
 .time {
@@ -1261,243 +1265,131 @@ td.win {
   color: var(--muted);
   font-size: 12.5px;
   font-weight: 400;
+  font-family: var(--font-sans), sans-serif;
 }
 
 .stages p {
   margin: 0;
-  max-width: 66ch;
+  max-width: 68ch;
   color: var(--fg-soft);
   font-size: 14.5px;
-  line-height: 1.6;
+  line-height: 1.62;
 }
 
-/* ---- honest section ----------------------------------------------------- */
+/* ---- closing band ------------------------------------------------------- */
 
-.honest {
-  background: var(--raised);
-  margin: 0 -24px;
-  padding-inline: 24px;
-  border-radius: var(--radius);
-}
-
-.grid2 ul {
-  margin: 0;
-  padding-left: 18px;
-  color: var(--fg-soft);
-  font-size: 14px;
-  line-height: 1.75;
-}
-
-.can h3 {
-  color: #15803d;
-}
-
-.cant h3 {
-  color: var(--accent);
-}
-
-/* ---- close -------------------------------------------------------------- */
-
-.cend {
+.band {
+  margin: 116px 24px 0;
+  border-radius: 36px;
+  padding: 78px 24px;
   text-align: center;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(
+    120% 140% at 50% 0%,
+    var(--accent) 0%,
+    var(--accent-deep) 45%,
+    var(--blue) 120%
+  );
 }
 
-.cend .sub {
-  margin-inline: auto;
+.band h2 {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 500;
+  font-size: clamp(30px, 5vw, 52px);
+  letter-spacing: -0.02em;
+  margin: 0;
 }
+
+.band p {
+  margin: 18px auto 0;
+  max-width: 520px;
+  opacity: 0.93;
+  font-size: 17.5px;
+  line-height: 1.5;
+}
+
+.band .btn {
+  margin-top: 32px;
+  background: #fff;
+  color: var(--ink) !important;
+  padding: 14px 34px;
+  font-size: 15.5px;
+}
+
+/* ---- footer ------------------------------------------------------------- */
 
 .lfoot {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  padding-top: 28px;
-  border-top: 1px solid var(--line-soft);
-  color: var(--muted);
-  font-size: 13px;
+  display: block;
+  padding: 58px 24px 46px;
+  margin-top: 78px;
+  text-align: center;
+  color: var(--fg-soft);
+  border-top: 1px solid var(--line);
 }
 
-.lfoot div {
-  display: flex;
-  gap: 18px;
+.lfoot .logo {
+  display: inline-block;
+  font-size: 21px;
+  margin-bottom: 10px;
+}
+
+.lfoot small {
+  display: block;
+  font-size: 13.5px;
 }
 
 .lfoot a {
-  color: var(--muted);
+  color: var(--fg-soft);
   text-decoration: none;
 }
 
 .lfoot a:hover {
-  color: var(--accent);
+  color: var(--accent-deep);
 }
 
-@media (max-width: 700px) {
-  .lnavlinks a:not(.cta) {
+@media (max-width: 880px) {
+  .navlinks {
     display: none;
   }
 
-  .lhero {
-    padding: 48px 0 40px;
+  .cards,
+  .cards.two {
+    grid-template-columns: 1fr;
   }
 
-  .lsec {
-    padding: 48px 0;
+  .hero-cta {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .lnav {
+    margin-top: 12px;
+    padding-left: 18px;
+  }
+
+  .navcta .btn-ghost {
+    display: none;
+  }
+
+  .logos {
+    gap: 26px 36px;
+  }
+
+  .band {
+    margin-inline: 16px;
+    padding: 56px 20px;
   }
 }
 
-/* ---- account (sidebar) -------------------------------------------------- */
-
-.account {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.account img,
-.avatar {
-  width: 24px;
-  height: 24px;
-  flex: none;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.avatar {
-  display: grid;
-  place-items: center;
-  background: var(--accent);
-  color: #fff;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.who2 {
-  flex: 1;
-  min-width: 0;
-  color: var(--fg-soft);
-  font-size: 12.5px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.account button,
-.signin {
-  border: 0;
-  background: none;
-  color: var(--muted);
-  font: inherit;
-  font-size: 12px;
-  cursor: pointer;
-  padding: 0;
-  text-align: left;
-}
-
-.account button:hover,
-.signin:hover {
-  color: var(--accent);
-}
-
-.signin {
-  line-height: 1.4;
-}
-
-/* ---- profile picker ----------------------------------------------------- */
-
-.profiles {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 18px;
-  text-align: left;
-}
-
-.prow {
-  display: flex;
-  align-items: center;
-  border: 1px solid var(--line);
-  border-radius: 11px;
-  background: var(--surface);
-}
-
-.prow:hover {
-  border-color: var(--accent);
-}
-
-.prow button {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  padding: 10px 12px;
-  background: none;
-  border: 0;
-  color: var(--fg);
-  font: inherit;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.prow span[role="button"] {
-  padding: 0 12px;
-  color: var(--muted);
-  font-size: 17px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.prow span[role="button"]:hover {
-  color: var(--accent);
-}
-
-.nameform {
-  display: flex;
-  gap: 8px;
-}
-
-.nameform input {
-  flex: 1;
-  min-width: 0;
-  padding: 11px 14px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 11px;
-  color: var(--fg);
-  font: inherit;
-  font-size: 14.5px;
-}
-
-.nameform input:focus {
-  outline: 0;
-  border-color: var(--accent);
-}
-
-.nameform .cta {
-  padding: 11px 20px;
-}
-
-.nameform .cta:disabled,
-.cta[disabled] {
-  opacity: 0.4;
-  pointer-events: none;
-}
-
-.asbutton {
-  display: block;
-  width: 100%;
-  border: 0;
-  background: none;
-  font: inherit;
-  cursor: pointer;
-}
-
-/* ---- login portal ------------------------------------------------------- */
+/* ========================================================================== */
+/* auth                                                                        */
+/* ========================================================================== */
 
 .authwrap {
+  position: relative;
+  isolation: isolate;
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
@@ -1505,43 +1397,61 @@ td.win {
   justify-content: center;
   gap: 18px;
   padding: 32px 20px;
+  overflow: hidden;
+}
+
+/* A shorter, softer version of the hero sunrise. At full strength it swallowed
+   the card, which sits in the middle of the viewport rather than under the
+   gradient's crown. */
+.wash.auth {
+  position: absolute;
+  z-index: -1;
+  inset: 0 auto auto 50%;
+  width: 100vw;
+  height: 360px;
+  transform: translateX(-50%);
+  background: radial-gradient(
+    120% 90% at 50% -30%,
+    var(--accent) 0%,
+    color-mix(in srgb, var(--accent-hi) 55%, transparent) 32%,
+    color-mix(in srgb, var(--lav) 45%, transparent) 62%,
+    transparent 88%
+  );
+  pointer-events: none;
 }
 
 .backhome {
   position: absolute;
-  top: 22px;
-  left: 24px;
-  color: var(--muted);
+  top: 24px;
+  left: 26px;
+  color: var(--ink);
   font-size: 13.5px;
+  font-weight: 500;
   text-decoration: none;
+  opacity: 0.8;
 }
 
 .backhome:hover {
-  color: var(--accent);
+  opacity: 1;
 }
 
 .authcard {
   width: 100%;
   max-width: 420px;
-  padding: 36px 32px;
+  padding: 38px 32px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 20px;
-  box-shadow: var(--shadow);
+  border-radius: 26px;
+  box-shadow: 0 10px 40px rgba(244, 93, 0, 0.1);
   text-align: center;
 }
 
-.mark.big {
-  width: 44px;
-  height: 44px;
-  margin: 0 auto 20px;
-  border-radius: 13px;
-  font-size: 22px;
-}
-
 .authcard h1 {
-  margin: 0 0 10px;
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 500;
   font-size: 28px;
+  letter-spacing: -0.02em;
+  margin: 0 0 10px;
 }
 
 .authcard p {
@@ -1549,6 +1459,51 @@ td.win {
   color: var(--fg-soft);
   font-size: 14.5px;
   line-height: 1.6;
+}
+
+.mark.big {
+  width: 46px;
+  height: 46px;
+  margin: 0 auto 20px;
+  border-radius: 14px;
+  font-size: 22px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 24px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+
+.pill.dark {
+  background: var(--pill-dark);
+  color: var(--cream) !important;
+}
+
+.pill.dark:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(36, 29, 26, 0.28);
+}
+
+.pill.dark:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.pill.wide {
+  display: flex;
+  width: 100%;
+  padding: 13px 24px;
+  font-size: 15px;
 }
 
 .gbtn {
@@ -1560,46 +1515,19 @@ td.win {
   padding: 12px 18px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 11px;
-  color: var(--fg);
+  border-radius: 999px;
+  color: var(--ink);
   font: inherit;
   font-size: 14.5px;
-  font-weight: 550;
+  font-weight: 500;
   cursor: pointer;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
 .gbtn:hover {
   border-color: var(--accent);
-  box-shadow: var(--shadow);
+  box-shadow: 0 8px 20px rgba(244, 93, 0, 0.1);
 }
-
-.cta.wide {
-  display: block;
-  width: 100%;
-  text-align: center;
-}
-
-.skip {
-  display: inline-block;
-  margin-top: 18px;
-  color: var(--muted);
-  font-size: 13px;
-  text-decoration: none;
-}
-
-.skip:hover {
-  color: var(--accent);
-}
-
-.authfoot {
-  max-width: 420px;
-  color: var(--muted);
-  font-size: 12.5px;
-  text-align: center;
-}
-
-/* ---- google button / divider -------------------------------------------- */
 
 .or {
   display: flex;
@@ -1642,322 +1570,123 @@ td.win {
   cursor: pointer;
 }
 
-.signedin button:hover {
-  color: var(--accent);
-}
-
-/* ---- refinements -------------------------------------------------------- */
-
-/* The hero wash needs a stacking context or the negative z-index puts it
-   behind the page background instead of behind the text. */
-.land {
-  position: relative;
-  isolation: isolate;
-}
-
-/* Cards lift on a shadow rather than a border colour alone -- the border
-   change alone read as flat against the ivory. */
-.card,
-.grid3 article,
-.grid2 article,
-.stats div {
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-}
-
-.grid3 article:hover,
-.stats div:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 2px 4px rgba(23, 21, 15, 0.05), 0 14px 32px rgba(23, 21, 15, 0.07);
-}
-
-/* Chat assistant name in the serif, so a reply reads as coming from something
-   rather than from a form field. */
-.turn.assistant .who {
-  font-family: var(--font-display), Georgia, serif;
-  font-size: 13px;
-  font-weight: 400;
-  letter-spacing: 0.02em;
-  text-transform: none;
-}
-
-.turn.user .who {
-  font-size: 11px;
-}
-
-/* Sidebar brand picks up the serif too. */
-.name {
-  font-family: var(--font-display), Georgia, serif;
-  font-size: 18px;
-  font-weight: 400;
-  letter-spacing: 0;
-}
-
-.eyebrow {
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 11px;
-}
-
-/* Slightly wider measure and looser leading in answers: this model writes
-   long paragraphs and they were reading as a wall. */
-.md p,
-.md li {
-  max-width: 68ch;
-  line-height: 1.7;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .card,
-  .grid3 article,
-  .stats div {
-    transition: none;
-  }
-}
-
-/* ---- indigo's roles ----------------------------------------------------- */
-
-/* Structure and secondary emphasis go blue; anything the reader acts on stays
-   saffron. Keeping the split strict is what stops two accents reading as an
-   accident. */
-
-.eyebrow {
-  background: var(--blue-soft);
-  border-color: color-mix(in srgb, var(--blue) 22%, transparent);
-  color: var(--blue);
-}
-
-.num,
-.stages h3 {
-  color: var(--blue);
-}
-
-.stages h3 {
-  font-family: var(--font-display), Georgia, serif;
-  font-size: 18px;
-}
-
-thead th {
-  color: var(--blue);
-}
-
-.sources blockquote {
-  border-left-color: var(--blue);
-}
-
-.sources cite {
-  color: var(--blue);
-}
-
-.turn.assistant .who {
-  color: var(--blue);
-}
-
-.can h3 {
-  color: var(--blue);
-}
-
-.badge {
-  border-color: color-mix(in srgb, var(--blue) 20%, transparent);
-  background: var(--blue-soft);
-  color: var(--blue);
-}
-
-/* Both marks carry the full gradient, so the brand reads as the two colours
-   together rather than as saffron with blue bolted on. */
-.mark {
-  background: linear-gradient(140deg, var(--accent-hi), var(--accent) 55%, var(--blue));
-}
-
-.stats div:nth-child(2n) dt {
-  color: var(--blue);
-}
-
-/* A hairline of colour along the top of the page, the way a masthead rule
-   works -- present, not loud. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0 0 auto;
-  height: 3px;
-  z-index: 50;
-  background: linear-gradient(
-    90deg,
-    var(--accent-hi),
-    var(--accent) 38%,
-    var(--blue) 78%,
-    var(--blue-hi)
-  );
-}
-
-.lnav,
-header {
-  top: 3px;
-}
-
-.honest {
-  background: linear-gradient(
-    170deg,
-    var(--blue-soft),
-    color-mix(in srgb, var(--accent-soft) 60%, transparent)
-  );
-}
-
-.cend .cta {
-  box-shadow: 0 4px 18px color-mix(in srgb, var(--accent) 28%, transparent);
-}
-
-/* ---- landing, over the wash --------------------------------------------- */
-
-/* Nav sits on the saturated part of the wash, so its links need more contrast
-   than the muted grey they carry further down the page. */
-.lnav .lnavlinks a {
-  color: var(--fg-soft);
-  font-weight: 500;
-}
-
-.lnav .lnavlinks a:hover {
-  color: var(--fg);
-}
-
-.lnav .name {
-  color: #14161c;
-}
-
-/* The brand mark competes with the saffron ground it sits on; ink reads
-   cleanly against it where the gradient would not. */
-.lnav .mark {
-  background: linear-gradient(140deg, var(--accent-hi), var(--accent) 55%, var(--blue));
-}
-
-.lnavlinks {
-  gap: 30px;
-}
-
-/* Sections below the fold sit on plain background, so the first one needs no
-   rule above it -- the wash already ends the hero. */
-.lsec:first-of-type {
-  border-top: 0;
-}
-
-@media (max-width: 760px) {
-  .wash {
-    height: 420px;
-  }
-
-  .lnav {
-    padding-left: 16px;
-  }
-
-  .navactions .pill.light {
-    display: none;
-  }
-
-  .stats {
-    margin-top: 48px;
-  }
-}
-
-/* ---- shared across routes ----------------------------------------------- */
-
-.authwrap {
-  position: relative;
-  isolation: isolate;
-}
-
-/* The auth page is centred vertically, so its wash sits shorter and softer
-   than the landing one -- at full strength it would swallow the card. */
-.wash.auth {
-  height: 340px;
-}
-
-.pill.wide {
+.profiles {
   display: flex;
-  width: 100%;
-  padding: 13px 24px;
-  font-size: 15px;
-}
-
-.pill.dark:disabled {
-  opacity: 0.35;
-  pointer-events: none;
-}
-
-.ornament.small {
-  margin-bottom: 14px;
-  font-size: 20px;
-  color: color-mix(in srgb, var(--accent) 62%, var(--muted));
-}
-
-/* The chat hero is left-aligned, unlike the landing and auth ones. */
-.hero .ornament.small {
-  display: inline-block;
-}
-
-/* ---- landing sections below the fold ------------------------------------ */
-
-/* Numbered stages get a rule down the left, so the column of numbers reads as
-   a sequence rather than four unrelated rows. */
-.stages {
-  position: relative;
-  padding-left: 4px;
-}
-
-.stages::before {
-  content: "";
-  position: absolute;
-  left: 20px;
-  top: 26px;
-  bottom: 26px;
-  width: 1px;
-  background: linear-gradient(
-    to bottom,
-    var(--accent),
-    color-mix(in srgb, var(--blue) 60%, transparent)
-  );
-}
-
-.num {
-  position: relative;
-  z-index: 1;
-  background: var(--bg);
-  padding: 3px 0 6px;
-}
-
-/* Results table: tint the winning column so the eye lands on it without
-   needing to read the header. */
-tbody td:last-child {
-  background: color-mix(in srgb, var(--accent-soft) 65%, transparent);
-}
-
-thead th:last-child {
-  background: color-mix(in srgb, var(--accent-soft) 65%, transparent);
-}
-
-/* Section headings pick up a small saffron rule above them. */
-.lsec > h2::before {
-  content: "";
-  display: block;
-  width: 34px;
-  height: 2px;
+  flex-direction: column;
+  gap: 5px;
   margin-bottom: 18px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, var(--accent), var(--blue));
+  text-align: left;
 }
 
-.cend > h2::before {
-  margin-inline: auto;
+.prow {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
 }
 
-/* The italic half of the headline carries the emphasis, which is what the
-   serif was chosen for -- a second colour here would fight the wash. */
-.lhero h1 em {
-  font-style: italic;
-  color: var(--accent);
+.prow:hover {
+  border-color: var(--accent);
 }
 
-/* Stat figures sit close under their labels; the label is doing real work
-   now that it carries a qualifier rather than a bare noun. */
-.stats dd {
-  line-height: 1.45;
-  max-width: 22ch;
+.prow button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 9px 12px;
+  background: none;
+  border: 0;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.prow span[role="button"] {
+  padding: 0 14px;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.prow span[role="button"]:hover {
+  color: var(--accent-deep);
+}
+
+.nameform {
+  display: flex;
+  gap: 8px;
+}
+
+.nameform input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14.5px;
+}
+
+.nameform input:focus {
+  outline: 0;
+  border-color: var(--accent);
+}
+
+.skip {
+  display: inline-block;
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.skip:hover {
+  color: var(--accent-deep);
+}
+
+.asbutton {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.authfoot {
+  max-width: 420px;
+  color: var(--muted);
+  font-size: 12.5px;
+  text-align: center;
+}
+
+/* Chat's empty state carries a smaller ornament than the landing hero. */
+.ornament.small {
+  display: inline-block;
+  margin-bottom: 14px;
+  font-size: 19px;
+  letter-spacing: 4px;
+  color: var(--accent-deep);
+  opacity: 0.9;
+}
+
+.avatar {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent-deep);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
 }

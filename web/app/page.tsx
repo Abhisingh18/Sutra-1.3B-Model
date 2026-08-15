@@ -1,13 +1,13 @@
 import Link from "next/link";
 
-/* Landing page. Deliberately a server component with no client JavaScript --
- * it is static content, and shipping a React bundle to render prose would slow
- * the first thing anyone sees for no gain. The chat app lives at /chat.
+/* Landing page. A server component with no client JavaScript -- it is static
+ * content, and shipping a React bundle to render prose would slow the first
+ * thing anyone sees for no gain. The chat app lives at /chat.
  *
- * The numbers below are measured, not marketing: they come from
- * src/eval.py --compare over 500 examples per task. The WinoGrande row sits at
- * chance and is shown anyway, because a benchmark table that only lists wins is
- * not evidence of anything.
+ * Every figure below is measured, not marketing: they come from
+ * src/eval.py --compare over 500 examples per task, and src/eval_posttrain.py
+ * for the held-out numbers. WinoGrande sits at chance and is shown anyway --
+ * a results table that lists only wins is not evidence of anything.
  */
 
 const SCORES = [
@@ -22,112 +22,118 @@ const STAGES = [
     n: "01",
     name: "Tokenizer",
     time: "3 hours",
-    body: "48,000-token BPE vocabulary covering English and Devanagari, with chat, reasoning and 4,096 audio tokens reserved up front — adding them later would leave their embeddings untrained.",
+    body: "A 48,000-token BPE vocabulary over English and Devanagari, with chat, reasoning and 4,096 audio tokens reserved up front. Added later, their embeddings would start from noise while everything else had seen 18B tokens.",
   },
   {
     n: "02",
     name: "Pretraining",
     time: "4 days 9 hours",
-    body: "18B tokens on 4× RTX 6000 Ada at 33% MFU. Held-out perplexity 15.00, zero dead experts, one loss spike that recovered on its own.",
+    body: "18B tokens across 4× RTX 6000 Ada at 33% MFU. Held-out perplexity 15.00, zero dead experts, and one loss spike across 17,166 steps that recovered on its own.",
   },
   {
     n: "03",
     name: "Supervised fine-tuning",
     time: "18 hours",
-    body: "200,000 conversations across three epochs. Held-out perplexity 5.49, and the third epoch measured best — so no overfitting.",
+    body: "200,000 conversations over three epochs. Held-out perplexity 5.49, with the third epoch measuring best — so the extra epochs bought quality rather than overfitting.",
   },
   {
     n: "04",
     name: "Preference alignment",
     time: "6 hours",
-    body: "DPO over 100,000 preference pairs. Held-out accuracy came out at 47.5% against a 50% baseline, so this stage did not generalise — reported here rather than hidden.",
+    body: "DPO across 100,000 preference pairs. Held-out accuracy landed at 47.5% against a 50% baseline, so this stage did not generalise. Reported here rather than quietly dropped.",
   },
 ];
 
 export default function Landing() {
   return (
-    <div className="land">
-      {/* Full-bleed wash behind the top of the page. Saffron at the crown
-          falling through periwinkle into the page background, so the fold has
-          weight without any imagery to load. */}
-      <div className="wash" aria-hidden="true" />
+    <>
+      {/* The sunrise sits on the header itself rather than a floating layer, so
+          the gradient ends exactly where the content does. */}
+      <header className="hero">
+        <nav className="lnav">
+          <Link href="/" className="logo">
+            sutra<span>.ai</span>
+          </Link>
+          <div className="navlinks">
+            <a href="#architecture">Architecture</a>
+            <a href="#results">Results</a>
+            <a href="#pipeline">Pipeline</a>
+            <a href="https://github.com/Abhisingh18/Sutra-1.3B-Model">Code</a>
+          </div>
+          <div className="navcta">
+            <Link href="/chat" className="btn btn-dark">
+              Try it
+            </Link>
+            <Link href="/login" className="btn btn-ghost">
+              Sign in
+            </Link>
+          </div>
+        </nav>
 
-      <nav className="lnav">
-        <div className="brand">
-          <span className="mark">स</span>
-          <span className="name">Sutra</span>
-        </div>
-        <div className="lnavlinks">
-          <a href="#architecture">Architecture</a>
-          <a href="#results">Results</a>
-          <a href="https://github.com/Abhisingh18/Sutra-1.3B-Model">GitHub</a>
-        </div>
-        <div className="navactions">
-          <Link href="/chat" className="pill dark">
-            Try it
-          </Link>
-          <Link href="/login" className="pill light">
-            Sign in
-          </Link>
-        </div>
-      </nav>
+        <div className="wrap hero-inner">
+          <div className="ornament">
+            ❧ ✦ ❧<span className="rule" />
+          </div>
+          <div className="eyebrow">Pretrained · Fine-tuned · Aligned</div>
+          <h1>
+            Every weight
+            <br />
+            learned from zero
+          </h1>
+          <p className="sub">
+            A 1.32-billion-parameter Mixture-of-Experts model, written from first
+            principles in PyTorch. Own tokenizer, own data pipeline, own training
+            loop — nothing pretrained, nothing inherited.
+          </p>
+          <div className="hero-cta">
+            <Link href="/chat" className="btn btn-dark">
+              Start chatting
+            </Link>
+            <a
+              className="btn btn-ghost"
+              href="https://huggingface.co/Abhisingh-18/Sutra-1.3B-Chat"
+            >
+              Download weights
+            </a>
+          </div>
 
-      <header className="lhero">
-        <span className="ornament" aria-hidden="true">
-          ❦
-        </span>
-        <span className="eyebrow">
-          <span>Pretrained · Fine-tuned · Aligned</span>
-        </span>
-        <h1>
-          Every weight <em>learned from zero.</em>
-        </h1>
-        <p>
-          A 1.32-billion-parameter Mixture-of-Experts model, written from first
-          principles in PyTorch — own tokenizer, own data pipeline, own training
-          loop. Nothing pretrained, nothing inherited, no <code>Trainer</code>
-          anywhere in the stack.
-        </p>
-        <div className="herocta">
-          <Link href="/chat" className="pill dark big">
-            Start chatting
-          </Link>
-          <a
-            className="pill light big"
-            href="https://huggingface.co/Abhisingh-18/Sutra-1.3B-Chat"
-          >
-            Download weights
-          </a>
+          {/* The reference puts a strip of partner logos here. There are none
+              to put, so the same slot carries the four numbers that actually
+              describe the model. */}
+          <div className="trust">
+            <div className="kicker">Built end to end</div>
+            <dl className="logos">
+              <div>
+                <dt>1.32B</dt>
+                <dd>parameters, 48 experts</dd>
+              </div>
+              <div>
+                <dt>0.28B</dt>
+                <dd>active per token · 4.7× sparse</dd>
+              </div>
+              <div>
+                <dt>18B</dt>
+                <dd>tokens of pretraining</dd>
+              </div>
+              <div>
+                <dt>11</dt>
+                <dd>days, tokenizer to aligned</dd>
+              </div>
+            </dl>
+          </div>
         </div>
-        <dl className="stats">
-          <div>
-            <dt>1.32B</dt>
-            <dd>parameters, 48 experts</dd>
-          </div>
-          <div>
-            <dt>0.28B</dt>
-            <dd>active per token — 4.7× sparse</dd>
-          </div>
-          <div>
-            <dt>18B</dt>
-            <dd>tokens of pretraining</dd>
-          </div>
-          <div>
-            <dt>11</dt>
-            <dd>days, tokenizer to aligned</dd>
-          </div>
-        </dl>
       </header>
 
-      <section id="architecture" className="lsec">
+      <section id="architecture" className="platform wrap">
         <h2>Mixture of Experts, with latent attention</h2>
-        <p className="sub">
-          Only four of forty-eight experts run for any given token, so the model
+        <p className="lead">
+          Four of forty-eight experts run for any given token, so the model
           carries 1.32B parameters of capacity at 0.28B parameters of compute.
-          That ratio is why it answers on a CPU at roughly ten tokens a second.
+          That ratio is why it answers on a CPU at ten tokens a second.
         </p>
-        <div className="grid3">
-          <article>
+        <div className="cards">
+          <article className="card">
+            <div className="dot" />
             <h3>48 + 1 experts</h3>
             <p>
               Top-4 routing with sigmoid scoring and bias-based load balancing.
@@ -136,18 +142,20 @@ export default function Landing() {
               raw embeddings collapses early.
             </p>
           </article>
-          <article>
+          <article className="card">
+            <div className="dot" />
             <h3>Latent attention</h3>
             <p>
               Multi-head Latent Attention compresses keys and values into a
-              256-wide latent before projection, with rotary position handled on
+              256-wide latent before projection, with rotary position carried on
               a decoupled 32-dimension head split.
             </p>
           </article>
-          <article>
+          <article className="card">
+            <div className="dot" />
             <h3>Built to be interrupted</h3>
             <p>
-              Checkpoints written atomically, batches a deterministic function of
+              Atomic checkpoints, batches that are a deterministic function of
               step and rank, and a loss-spike guard that rolls back. A four-day
               run does not finish uninterrupted.
             </p>
@@ -155,9 +163,9 @@ export default function Landing() {
         </div>
       </section>
 
-      <section id="results" className="lsec">
+      <section id="results" className="platform wrap">
         <h2>Measured, not claimed</h2>
-        <p className="sub">
+        <p className="lead">
           Log-likelihood scoring over 500 examples per task, length-normalised.
           Reproduce with <code>python -m src.eval --compare</code>.
         </p>
@@ -189,12 +197,12 @@ export default function Landing() {
           ARC-easy and PIQA sit well clear of chance, so the model learned real
           commonsense rather than fluent grammar alone. WinoGrande sits{" "}
           <em>at</em> chance — the pronoun-resolution reasoning it measures never
-          arrived, which is the sharpest available statement of what 0.28B active
+          arrived, which is the sharpest statement available of what 0.28B active
           parameters do not buy.
         </p>
       </section>
 
-      <section className="lsec">
+      <section id="pipeline" className="platform wrap">
         <h2>Four stages, eleven days</h2>
         <ol className="stages">
           {STAGES.map((s) => (
@@ -211,27 +219,27 @@ export default function Landing() {
         </ol>
       </section>
 
-      <section className="lsec honest">
-        <h2>What it cannot do</h2>
-        <p className="sub">
+      <section className="platform wrap">
+        <h2>What it will not do</h2>
+        <p className="lead">
           Trained on 18B tokens — roughly 500× less than comparable 1B models.
           That gap shows up in specific, predictable ways, and pretending
-          otherwise would waste your time.
+          otherwise would only waste your time.
         </p>
-        <div className="grid2">
-          <article className="can">
+        <div className="cards two">
+          <article className="card can">
             <h3>Does well</h3>
             <ul>
               <li>Writes and rewrites — notes, emails, short paragraphs</li>
               <li>Follows formatting instructions: lists, bullets, tone</li>
-              <li>Answers from a document you upload</li>
+              <li>Answers from a document you upload, and cites the passage</li>
             </ul>
           </article>
-          <article className="cant">
+          <article className="card cant">
             <h3>Does not</h3>
             <ul>
               <li>Recall facts reliably — it states wrong ones confidently</li>
-              <li>Reason across multiple steps</li>
+              <li>Reason across several steps</li>
               <li>Write working code</li>
               <li>Copy figures accurately, even out of a passage it just read</li>
             </ul>
@@ -239,26 +247,31 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="lsec cend">
-        <h2>Talk to it</h2>
-        <p className="sub">
-          Runs on a workstation behind a tunnel. Upload a document and it will
-          answer from that, with the passage it used shown underneath.
-        </p>
-        <Link href="/chat" className="cta">
-          Open the chat
-        </Link>
+      <section className="band">
+        <div className="wrap">
+          <h2>Talk to it</h2>
+          <p>
+            Upload a document and it answers from that, with the passage it used
+            shown underneath. No account needed.
+          </p>
+          <Link href="/chat" className="btn">
+            Open the chat
+          </Link>
+        </div>
       </section>
 
       <footer className="lfoot">
-        <span>Sutra-1.3B · Apache 2.0</span>
-        <div>
-          <a href="https://github.com/Abhisingh18/Sutra-1.3B-Model">GitHub</a>
+        <Link href="/" className="logo">
+          sutra<span>.ai</span>
+        </Link>
+        <small>
+          1.32B Mixture-of-Experts · Apache 2.0 ·{" "}
+          <a href="https://github.com/Abhisingh18/Sutra-1.3B-Model">GitHub</a> ·{" "}
           <a href="https://huggingface.co/Abhisingh-18/Sutra-1.3B-Chat">
             Hugging Face
           </a>
-        </div>
+        </small>
       </footer>
-    </div>
+    </>
   );
 }

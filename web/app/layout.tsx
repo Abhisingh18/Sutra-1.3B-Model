@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Instrument_Serif, Inter } from "next/font/google";
+import { Fraunces, Inter } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 
 import { ProfileProvider } from "./profile";
@@ -9,9 +9,8 @@ import "./globals.css";
    runtime request to Google and no flash of unstyled text. The pairing does
    the work the old system stack could not: a serif with real contrast for
    display, and a neutral sans that stays legible at 13px in the sidebar. */
-const display = Instrument_Serif({
-  weight: "400",
-  style: ["normal", "italic"],
+const display = Fraunces({
+  weight: ["400", "500", "600"],
   subsets: ["latin"],
   variable: "--font-display",
   display: "swap",

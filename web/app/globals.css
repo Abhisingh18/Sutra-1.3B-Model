@@ -1,20 +1,30 @@
-/* Warm ivory and deep ink, with a single terracotta accent. Indian-software
-   palettes tend to sit in this family rather than the blue-grey default, and
-   one saturated accent against neutrals reads as considered rather than
-   decorated. */
+/* Saffron and indigo on near-white.
+ *
+ * Two accents rather than one, kept in strict roles: saffron carries anything
+ * the reader acts on -- buttons, links, list markers, the active chat -- and
+ * indigo carries structure and secondary emphasis. Mixing the two freely is
+ * what makes a two-colour palette look accidental, so gradients are the only
+ * place they meet.
+ */
 :root {
-  --bg: #faf8f5;
+  --bg: #fcfcfd;
   --surface: #ffffff;
-  --raised: #f4f1ec;
-  --fg: #17150f;
-  --fg-soft: #4c4638;
-  --muted: #8a8271;
-  --line: #e6e1d7;
-  --line-soft: #efebe3;
-  --accent: #b5451b;
-  --accent-hi: #d4551f;
-  --accent-soft: #fdf0e8;
-  --shadow: 0 1px 2px rgba(23, 21, 15, 0.04), 0 8px 24px rgba(23, 21, 15, 0.04);
+  --raised: #f6f7fa;
+  --fg: #14161c;
+  --fg-soft: #454b5a;
+  --muted: #7d8598;
+  --line: #e4e7ee;
+  --line-soft: #eef0f5;
+
+  --accent: #e8871e;
+  --accent-hi: #ff9d33;
+  --accent-soft: #fff5e9;
+
+  --blue: #2f4d9b;
+  --blue-hi: #4468c4;
+  --blue-soft: #eef2fc;
+
+  --shadow: 0 1px 2px rgba(20, 22, 28, 0.04), 0 8px 24px rgba(20, 22, 28, 0.05);
   --radius: 14px;
   --aside: 260px;
 }
@@ -23,18 +33,24 @@
    to key off prefers-color-scheme as well as an explicit choice. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0d0c0a;
-    --surface: #16150f;
-    --raised: #1d1b15;
-    --fg: #f6f3ec;
-    --fg-soft: #d3cec2;
-    --muted: #918a79;
-    --line: #29261f;
-    --line-soft: #221f19;
-    --accent: #e2703c;
-    --accent-hi: #f08a56;
-    --accent-soft: #241610;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.3);
+    --bg: #0b0d12;
+    --surface: #12151c;
+    --raised: #171b24;
+    --fg: #f2f4f8;
+    --fg-soft: #c3c9d6;
+    --muted: #838b9d;
+    --line: #232833;
+    --line-soft: #1c202a;
+
+    --accent: #ffa544;
+    --accent-hi: #ffb867;
+    --accent-soft: #241a0e;
+
+    --blue: #7f9ce8;
+    --blue-hi: #9db3f0;
+    --blue-soft: #141a2b;
+
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.45), 0 8px 24px rgba(0, 0, 0, 0.35);
   }
 }
 
@@ -881,16 +897,22 @@ main.centered {
   content: "";
   position: absolute;
   z-index: -1;
-  top: -180px;
-  left: -240px;
-  width: 780px;
-  height: 620px;
-  background: radial-gradient(
-    circle at 30% 40%,
-    color-mix(in srgb, var(--accent) 13%, transparent),
-    transparent 62%
-  );
-  filter: blur(20px);
+  top: -200px;
+  left: -280px;
+  width: 1000px;
+  height: 680px;
+  background:
+    radial-gradient(
+      circle at 22% 38%,
+      color-mix(in srgb, var(--accent) 20%, transparent),
+      transparent 58%
+    ),
+    radial-gradient(
+      circle at 72% 62%,
+      color-mix(in srgb, var(--blue) 16%, transparent),
+      transparent 58%
+    );
+  filter: blur(26px);
   pointer-events: none;
 }
 
@@ -918,7 +940,7 @@ main.centered {
 }
 
 .grad {
-  background: linear-gradient(120deg, var(--accent-hi), var(--accent));
+  background: linear-gradient(104deg, var(--accent-hi), var(--accent) 46%, var(--blue));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -1588,4 +1610,96 @@ td.win {
   .stats div {
     transition: none;
   }
+}
+
+/* ---- indigo's roles ----------------------------------------------------- */
+
+/* Structure and secondary emphasis go blue; anything the reader acts on stays
+   saffron. Keeping the split strict is what stops two accents reading as an
+   accident. */
+
+.eyebrow {
+  background: var(--blue-soft);
+  border-color: color-mix(in srgb, var(--blue) 22%, transparent);
+  color: var(--blue);
+}
+
+.num,
+.stages h3 {
+  color: var(--blue);
+}
+
+.stages h3 {
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 18px;
+}
+
+thead th {
+  color: var(--blue);
+}
+
+.sources blockquote {
+  border-left-color: var(--blue);
+}
+
+.sources cite {
+  color: var(--blue);
+}
+
+.turn.assistant .who {
+  color: var(--blue);
+}
+
+.can h3 {
+  color: var(--blue);
+}
+
+.badge {
+  border-color: color-mix(in srgb, var(--blue) 20%, transparent);
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+/* Both marks carry the full gradient, so the brand reads as the two colours
+   together rather than as saffron with blue bolted on. */
+.mark {
+  background: linear-gradient(140deg, var(--accent-hi), var(--accent) 55%, var(--blue));
+}
+
+.stats div:nth-child(2n) dt {
+  color: var(--blue);
+}
+
+/* A hairline of colour along the top of the page, the way a masthead rule
+   works -- present, not loud. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto;
+  height: 3px;
+  z-index: 50;
+  background: linear-gradient(
+    90deg,
+    var(--accent-hi),
+    var(--accent) 38%,
+    var(--blue) 78%,
+    var(--blue-hi)
+  );
+}
+
+.lnav,
+header {
+  top: 3px;
+}
+
+.honest {
+  background: linear-gradient(
+    170deg,
+    var(--blue-soft),
+    color-mix(in srgb, var(--accent-soft) 60%, transparent)
+  );
+}
+
+.cend .cta {
+  box-shadow: 0 4px 18px color-mix(in srgb, var(--accent) 28%, transparent);
 }

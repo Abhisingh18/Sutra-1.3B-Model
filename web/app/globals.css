@@ -7,14 +7,14 @@
  * place they meet.
  */
 :root {
-  --bg: #fcfcfd;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --raised: #f6f7fa;
+  --raised: #f7f8fa;
   --fg: #14161c;
   --fg-soft: #454b5a;
   --muted: #7d8598;
-  --line: #e4e7ee;
-  --line-soft: #eef0f5;
+  --line: #e6e9f0;
+  --line-soft: #f0f2f6;
 
   --accent: #e8871e;
   --accent-hi: #ff9d33;
@@ -24,7 +24,7 @@
   --blue-hi: #4468c4;
   --blue-soft: #eef2fc;
 
-  --shadow: 0 1px 2px rgba(20, 22, 28, 0.04), 0 8px 24px rgba(20, 22, 28, 0.05);
+  --shadow: 0 1px 2px rgba(20, 22, 28, 0.05), 0 10px 28px rgba(20, 22, 28, 0.06);
   --radius: 14px;
   --aside: 260px;
 }
@@ -828,22 +828,22 @@ main.centered {
   top: 0;
   left: 50%;
   width: 100vw;
-  height: 640px;
+  height: 540px;
   transform: translateX(-50%);
   /* Tinted, not saturated. The page reads white first and picks up colour
      second -- a full-strength wash made every section below it look grey by
      comparison, which is the usual cost of a loud fold. */
   background:
     radial-gradient(
-      ellipse 58% 70% at 50% -18%,
-      color-mix(in srgb, var(--accent) 26%, transparent) 0%,
-      color-mix(in srgb, var(--accent) 12%, transparent) 38%,
-      transparent 68%
+      ellipse 56% 64% at 50% -22%,
+      color-mix(in srgb, var(--accent) 13%, transparent) 0%,
+      color-mix(in srgb, var(--accent) 5%, transparent) 40%,
+      transparent 66%
     ),
     radial-gradient(
-      ellipse 86% 56% at 50% 16%,
-      color-mix(in srgb, var(--blue) 12%, transparent) 0%,
-      transparent 70%
+      ellipse 84% 52% at 50% 14%,
+      color-mix(in srgb, var(--blue) 6%, transparent) 0%,
+      transparent 68%
     ),
     linear-gradient(180deg, transparent 46%, var(--bg) 86%);
   pointer-events: none;
@@ -1841,7 +1841,7 @@ header {
 
 @media (max-width: 760px) {
   .wash {
-    height: 500px;
+    height: 420px;
   }
 
   .lnav {
@@ -1867,8 +1867,7 @@ header {
 /* The auth page is centred vertically, so its wash sits shorter and softer
    than the landing one -- at full strength it would swallow the card. */
 .wash.auth {
-  height: 380px;
-  opacity: 0.75;
+  height: 340px;
 }
 
 .pill.wide {

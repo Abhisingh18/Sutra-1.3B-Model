@@ -27,9 +27,23 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 say() { echo "[$(date '+%F %T')] $*" | tee -a "$LOG"; }
 
 start_server() {
+  # Claim the port first. Without this an orphan from an earlier run keeps
+  # holding it, every new server exits with EADDRINUSE, and the supervisor
+  # restarts it forever while the health check passes against the orphan.
+  if command -v fuser >/dev/null 2>&1; then
+    fuser -k "$PORT/tcp" >/dev/null 2>&1 || true
+  else
+    pkill -f "deploy.server --port $PORT" 2>/dev/null || true
+  fi
+  sleep 2
+
   say "starting model server on :$PORT"
   "$PY" -m deploy.server --port "$PORT" >>"$ROOT/logs_server.txt" 2>&1 &
   SERVER_PID=$!
+  # Loading 5.3 GB of weights takes the better part of a minute. Health checks
+  # must not run before then, or every start is killed mid-load and the
+  # supervisor restarts forever without the server once coming up.
+  READY_AT=$(( $(date +%s) + 90 ))
 }
 
 start_tunnel() {
@@ -66,6 +80,8 @@ cleanup() {
 }
 trap cleanup INT TERM
 
+FAILS=0
+
 start_server
 start_tunnel
 
@@ -73,8 +89,17 @@ while true; do
   sleep 10
 
   if ! kill -0 "${SERVER_PID:-0}" 2>/dev/null; then
-    say "model server died, restarting"
+    FAILS=$((FAILS + 1))
+    say "model server died (restart #$FAILS)"
+    if [ "$FAILS" -ge 5 ]; then
+      say "five restarts in a row -- backing off 60s; check logs_server.txt"
+      sleep 60
+      FAILS=0
+    fi
     start_server
+    sleep 30
+  else
+    FAILS=0
   fi
 
   if ! kill -0 "${TUNNEL_PID:-0}" 2>/dev/null; then
@@ -85,11 +110,15 @@ while true; do
   # A live process is not the same as a working one: the server can hang while
   # still holding its port, and the tunnel can stay up after losing its edge
   # connection. Health is what actually matters.
+  # Still inside the startup grace period; nothing to check yet.
+  if [ "$(date +%s)" -lt "${READY_AT:-0}" ]; then
+    continue
+  fi
+
   if ! curl -fsS -m 10 "http://localhost:$PORT/health" >/dev/null 2>&1; then
     say "health check failed, restarting model server"
     kill "${SERVER_PID:-0}" 2>/dev/null
     sleep 3
     start_server
-    sleep 40
   fi
 done

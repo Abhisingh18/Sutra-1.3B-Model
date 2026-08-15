@@ -2,9 +2,9 @@
  *
  * A quick tunnel gets a new hostname every time it restarts. Baking that into
  * NEXT_PUBLIC_API_URL means the site points at a dead address until someone
- * redeploys, which is the failure this whole file exists to remove: the
- * supervisor publishes each new hostname to backend.json, and the browser
- * reads it at runtime.
+ * redeploys, which is the failure this file exists to remove: the supervisor
+ * publishes each new hostname to backend.json, and the browser reads it at
+ * runtime.
  *
  * Resolution order, and why:
  *   1. backend.json from the deployment -- current, and costs one small fetch
@@ -17,20 +17,28 @@ const FALLBACK = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 let cached: string | null = null;
 let inflight: Promise<string> | null = null;
 
+function clean(url: string): string {
+  return url.replace(/\/+$/, "");
+}
+
 export function backendUrl(): Promise<string> {
   if (cached) return Promise.resolve(cached);
   if (inflight) return inflight;
 
+  // Resolved through a local so the promise stays Promise<string>; returning
+  // the nullable `cached` widens it and the build rejects it.
   inflight = fetch("/backend.json", { cache: "no-store" })
     .then((r) => (r.ok ? r.json() : null))
-    .then((d) => {
-      const url = typeof d?.url === "string" && d.url ? d.url : FALLBACK;
-      cached = url.replace(/\/+$/, "");
-      return cached;
+    .then((d: { url?: unknown } | null) => {
+      const found =
+        d && typeof d.url === "string" && d.url ? clean(d.url) : clean(FALLBACK);
+      cached = found;
+      return found;
     })
     .catch(() => {
-      cached = FALLBACK;
-      return cached;
+      const found = clean(FALLBACK);
+      cached = found;
+      return found;
     })
     .finally(() => {
       inflight = null;
@@ -42,6 +50,6 @@ export function backendUrl(): Promise<string> {
 /* Forget the resolved address so the next call re-reads backend.json. Called
    when a request fails: the usual cause is that the tunnel restarted and the
    hostname we cached is now dead. */
-export function forgetBackend() {
+export function forgetBackend(): void {
   cached = null;
 }

@@ -828,21 +828,24 @@ main.centered {
   top: 0;
   left: 50%;
   width: 100vw;
-  height: 780px;
+  height: 640px;
   transform: translateX(-50%);
+  /* Tinted, not saturated. The page reads white first and picks up colour
+     second -- a full-strength wash made every section below it look grey by
+     comparison, which is the usual cost of a loud fold. */
   background:
     radial-gradient(
-      ellipse 62% 78% at 50% -12%,
-      var(--accent-hi) 0%,
-      color-mix(in srgb, var(--accent) 80%, transparent) 34%,
+      ellipse 58% 70% at 50% -18%,
+      color-mix(in srgb, var(--accent) 26%, transparent) 0%,
+      color-mix(in srgb, var(--accent) 12%, transparent) 38%,
       transparent 68%
     ),
     radial-gradient(
-      ellipse 90% 60% at 50% 22%,
-      color-mix(in srgb, var(--blue) 34%, transparent) 0%,
-      transparent 72%
+      ellipse 86% 56% at 50% 16%,
+      color-mix(in srgb, var(--blue) 12%, transparent) 0%,
+      transparent 70%
     ),
-    linear-gradient(180deg, transparent 42%, var(--bg) 88%);
+    linear-gradient(180deg, transparent 46%, var(--bg) 86%);
   pointer-events: none;
 }
 
@@ -1036,7 +1039,7 @@ main.centered {
 .ornament {
   display: block;
   margin-bottom: 20px;
-  color: color-mix(in srgb, #fff 78%, var(--accent));
+  color: color-mix(in srgb, var(--accent) 70%, var(--muted));
   font-size: 26px;
   line-height: 1;
 }
@@ -1808,12 +1811,12 @@ header {
 /* Nav sits on the saturated part of the wash, so its links need more contrast
    than the muted grey they carry further down the page. */
 .lnav .lnavlinks a {
-  color: #3a3326;
+  color: var(--fg-soft);
   font-weight: 500;
 }
 
 .lnav .lnavlinks a:hover {
-  color: #14161c;
+  color: var(--fg);
 }
 
 .lnav .name {
@@ -1823,7 +1826,7 @@ header {
 /* The brand mark competes with the saffron ground it sits on; ink reads
    cleanly against it where the gradient would not. */
 .lnav .mark {
-  background: #1c2233;
+  background: linear-gradient(140deg, var(--accent-hi), var(--accent) 55%, var(--blue));
 }
 
 .lnavlinks {
@@ -1838,7 +1841,7 @@ header {
 
 @media (max-width: 760px) {
   .wash {
-    height: 620px;
+    height: 500px;
   }
 
   .lnav {
@@ -1864,8 +1867,8 @@ header {
 /* The auth page is centred vertically, so its wash sits shorter and softer
    than the landing one -- at full strength it would swallow the card. */
 .wash.auth {
-  height: 420px;
-  opacity: 0.62;
+  height: 380px;
+  opacity: 0.75;
 }
 
 .pill.wide {

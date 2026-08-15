@@ -2,13 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { signIn, signOut, useSession } from "next-auth/react";
+
 import { Markdown } from "../markdown";
 
 // Set in Vercel: Settings -> Environment Variables. This is the cloudflared
 // URL printed by deploy/server.py's tunnel, and it changes on every restart
 // unless you use a named tunnel.
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const STORE_KEY = "sutra.chats.v1";
+const STORE_BASE = "sutra.chats.v1";
 
 type Src = { score: number; text: string; name: string };
 type Msg = { role: "user" | "assistant"; text: string; sources?: Src[] };
@@ -29,6 +31,14 @@ const EXAMPLES = [
 const newId = () => Math.random().toString(36).slice(2, 10);
 
 export default function Home() {
+  const { data: session, status } = useSession();
+  // Chats are namespaced by account so two people sharing a browser do not
+  // read each other's history. Signed out, everything lands in the anonymous
+  // bucket, which is also what an unconfigured deployment uses.
+  const storeKey = session?.user?.id
+    ? `${STORE_BASE}.${session.user.id}`
+    : STORE_BASE;
+
   const [chats, setChats] = useState<Chat[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [input, setInput] = useState("");
@@ -51,18 +61,21 @@ export default function Home() {
   // history in the browser is the honest place for it -- nothing to leak, and
   // it survives the tunnel going down.
   useEffect(() => {
+    if (status === "loading") return;
     try {
-      const raw = localStorage.getItem(STORE_KEY);
-      if (raw) setChats(JSON.parse(raw));
+      const raw = localStorage.getItem(storeKey);
+      setChats(raw ? JSON.parse(raw) : []);
     } catch {
       /* corrupt or unavailable storage is not worth crashing the page over */
     }
-  }, []);
+    setActiveId(null);
+  }, [storeKey, status]);
 
   useEffect(() => {
-    if (chats.length) localStorage.setItem(STORE_KEY, JSON.stringify(chats));
-    else localStorage.removeItem(STORE_KEY);
-  }, [chats]);
+    if (status === "loading") return;
+    if (chats.length) localStorage.setItem(storeKey, JSON.stringify(chats));
+    else localStorage.removeItem(storeKey);
+  }, [chats, storeKey, status]);
 
   // The backend can go away mid-session, so this polls rather than checking
   // once: a stale "online" badge is worse than no badge.
@@ -264,6 +277,24 @@ export default function Home() {
         </div>
 
         <div className="asidefoot">
+          {session?.user ? (
+            <div className="account">
+              {session.user.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={session.user.image} alt="" />
+              ) : (
+                <span className="avatar">
+                  {(session.user.name || "?").slice(0, 1)}
+                </span>
+              )}
+              <span className="who2">{session.user.name || session.user.email}</span>
+              <button onClick={() => signOut()}>Sign out</button>
+            </div>
+          ) : (
+            <button className="signin" onClick={() => signIn("google")}>
+              Sign in to keep chats separate
+            </button>
+          )}
           <span className={`status ${online ? "up" : online === false ? "down" : ""}`}>
             <i /> {online === null ? "checking" : online ? "online" : "offline"}
           </span>

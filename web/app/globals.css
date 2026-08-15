@@ -1192,3 +1192,183 @@ td.win {
     padding: 48px 0;
   }
 }
+
+/* ---- account (sidebar) -------------------------------------------------- */
+
+.account {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.account img,
+.avatar {
+  width: 24px;
+  height: 24px;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.who2 {
+  flex: 1;
+  min-width: 0;
+  color: var(--fg-soft);
+  font-size: 12.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account button,
+.signin {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
+.account button:hover,
+.signin:hover {
+  color: var(--accent);
+}
+
+.signin {
+  line-height: 1.4;
+}
+
+/* ---- login portal ------------------------------------------------------- */
+
+.authwrap {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 32px 20px;
+}
+
+.backhome {
+  position: absolute;
+  top: 22px;
+  left: 24px;
+  color: var(--muted);
+  font-size: 13.5px;
+  text-decoration: none;
+}
+
+.backhome:hover {
+  color: var(--accent);
+}
+
+.authcard {
+  width: 100%;
+  max-width: 420px;
+  padding: 36px 32px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.mark.big {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 20px;
+  border-radius: 13px;
+  font-size: 22px;
+}
+
+.authcard h1 {
+  margin: 0 0 10px;
+  font-size: 23px;
+  letter-spacing: -0.025em;
+  font-weight: 620;
+}
+
+.authcard p {
+  margin: 0 0 24px;
+  color: var(--fg-soft);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+.gbtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  color: var(--fg);
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 550;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.gbtn:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+}
+
+.cta.wide {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+
+.skip {
+  display: inline-block;
+  margin-top: 18px;
+  color: var(--muted);
+  font-size: 13px;
+  text-decoration: none;
+}
+
+.skip:hover {
+  color: var(--accent);
+}
+
+.envhelp {
+  margin: 0 0 22px;
+  padding: 14px;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  text-align: left;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11.5px;
+  line-height: 1.7;
+  color: var(--fg-soft);
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.authfoot {
+  max-width: 420px;
+  color: var(--muted);
+  font-size: 12.5px;
+  text-align: center;
+}

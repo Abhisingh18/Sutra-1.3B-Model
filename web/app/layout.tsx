@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { SessionProvider } from "next-auth/react";
 
+import { ProfileProvider } from "./profile";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,10 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {/* Wraps everything so the chat can read the session on the client.
-            Without a session it renders exactly as before -- sign-in is
-            additive here, not a gate. */}
-        <SessionProvider>{children}</SessionProvider>
+        {/* Makes the active profile available to the chat. Without one the app
+            behaves exactly as before -- a profile is additive, not a gate. */}
+        <ProfileProvider>{children}</ProfileProvider>
       </body>
     </html>
   );

@@ -1252,6 +1252,96 @@ td.win {
   line-height: 1.4;
 }
 
+/* ---- profile picker ----------------------------------------------------- */
+
+.profiles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
+  text-align: left;
+}
+
+.prow {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface);
+}
+
+.prow:hover {
+  border-color: var(--accent);
+}
+
+.prow button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px;
+  background: none;
+  border: 0;
+  color: var(--fg);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.prow span[role="button"] {
+  padding: 0 12px;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.prow span[role="button"]:hover {
+  color: var(--accent);
+}
+
+.nameform {
+  display: flex;
+  gap: 8px;
+}
+
+.nameform input {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  color: var(--fg);
+  font: inherit;
+  font-size: 14.5px;
+}
+
+.nameform input:focus {
+  outline: 0;
+  border-color: var(--accent);
+}
+
+.nameform .cta {
+  padding: 11px 20px;
+}
+
+.nameform .cta:disabled,
+.cta[disabled] {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.asbutton {
+  display: block;
+  width: 100%;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
 /* ---- login portal ------------------------------------------------------- */
 
 .authwrap {
@@ -1349,21 +1439,6 @@ td.win {
 
 .skip:hover {
   color: var(--accent);
-}
-
-.envhelp {
-  margin: 0 0 22px;
-  padding: 14px;
-  background: var(--raised);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  text-align: left;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11.5px;
-  line-height: 1.7;
-  color: var(--fg-soft);
-  overflow-x: auto;
-  white-space: pre;
 }
 
 .authfoot {

@@ -2,9 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { signIn, signOut, useSession } from "next-auth/react";
-
 import { Markdown } from "../markdown";
+import { useProfile } from "../profile";
 
 // Set in Vercel: Settings -> Environment Variables. This is the cloudflared
 // URL printed by deploy/server.py's tunnel, and it changes on every restart
@@ -31,13 +30,11 @@ const EXAMPLES = [
 const newId = () => Math.random().toString(36).slice(2, 10);
 
 export default function Home() {
-  const { data: session, status } = useSession();
+  const { profile, ready } = useProfile();
   // Chats are namespaced by account so two people sharing a browser do not
   // read each other's history. Signed out, everything lands in the anonymous
   // bucket, which is also what an unconfigured deployment uses.
-  const storeKey = session?.user?.id
-    ? `${STORE_BASE}.${session.user.id}`
-    : STORE_BASE;
+  const storeKey = profile ? `${STORE_BASE}.${profile.id}` : STORE_BASE;
 
   const [chats, setChats] = useState<Chat[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -61,7 +58,7 @@ export default function Home() {
   // history in the browser is the honest place for it -- nothing to leak, and
   // it survives the tunnel going down.
   useEffect(() => {
-    if (status === "loading") return;
+    if (!ready) return;
     try {
       const raw = localStorage.getItem(storeKey);
       setChats(raw ? JSON.parse(raw) : []);
@@ -69,13 +66,13 @@ export default function Home() {
       /* corrupt or unavailable storage is not worth crashing the page over */
     }
     setActiveId(null);
-  }, [storeKey, status]);
+  }, [storeKey, ready]);
 
   useEffect(() => {
-    if (status === "loading") return;
+    if (!ready) return;
     if (chats.length) localStorage.setItem(storeKey, JSON.stringify(chats));
     else localStorage.removeItem(storeKey);
-  }, [chats, storeKey, status]);
+  }, [chats, storeKey, ready]);
 
   // The backend can go away mid-session, so this polls rather than checking
   // once: a stale "online" badge is worse than no badge.
@@ -277,23 +274,18 @@ export default function Home() {
         </div>
 
         <div className="asidefoot">
-          {session?.user ? (
+          {profile ? (
             <div className="account">
-              {session.user.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={session.user.image} alt="" />
-              ) : (
-                <span className="avatar">
-                  {(session.user.name || "?").slice(0, 1)}
-                </span>
-              )}
-              <span className="who2">{session.user.name || session.user.email}</span>
-              <button onClick={() => signOut()}>Sign out</button>
+              <span className="avatar" style={{ background: profile.colour }}>
+                {profile.name.slice(0, 1)}
+              </span>
+              <span className="who2">{profile.name}</span>
+              <a href="/login">Switch</a>
             </div>
           ) : (
-            <button className="signin" onClick={() => signIn("google")}>
-              Sign in to keep chats separate
-            </button>
+            <a className="signin" href="/login">
+              Add a profile to keep chats separate
+            </a>
           )}
           <span className={`status ${online ? "up" : online === false ? "down" : ""}`}>
             <i /> {online === null ? "checking" : online ? "online" : "offline"}

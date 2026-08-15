@@ -656,3 +656,130 @@ h1 {
     padding-right: 16px;
   }
 }
+
+/* ---- rendered markdown -------------------------------------------------- */
+
+/* The body no longer needs pre-wrap once the renderer produces real blocks;
+   leaving it on would double every gap the list and paragraph rules create. */
+.turn.assistant .body {
+  white-space: normal;
+}
+
+.md > :first-child {
+  margin-top: 0;
+}
+
+.md > :last-child {
+  margin-bottom: 0;
+}
+
+.md p {
+  margin: 0 0 12px;
+}
+
+.md h3,
+.md h4 {
+  margin: 18px 0 8px;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.md ul,
+.md ol {
+  margin: 0 0 12px;
+  padding-left: 22px;
+}
+
+.md li {
+  margin-bottom: 6px;
+  padding-left: 2px;
+}
+
+.md li::marker {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.md code {
+  padding: 1px 5px;
+  background: var(--raised);
+  border: 1px solid var(--line-soft);
+  border-radius: 5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+}
+
+.md pre {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow-x: auto;
+}
+
+.md pre code {
+  padding: 0;
+  background: none;
+  border: 0;
+}
+
+/* ---- message actions ---------------------------------------------------- */
+
+.actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.turn:hover .actions,
+.actions:focus-within {
+  opacity: 1;
+}
+
+.actions button {
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.actions button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Touch devices have no hover, so the actions would never appear. */
+@media (hover: none) {
+  .actions {
+    opacity: 1;
+  }
+}
+
+/* ---- entrance ----------------------------------------------------------- */
+
+.turn {
+  animation: rise 0.25s ease both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .turn,
+  .dots i,
+  .spin {
+    animation: none;
+  }
+}

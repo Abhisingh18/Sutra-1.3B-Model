@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { Markdown } from "./markdown";
+
 // Set in Vercel: Settings -> Environment Variables. This is the cloudflared
 // URL printed by deploy/server.py's tunnel, and it changes on every restart
 // unless you use a named tunnel.
@@ -36,6 +38,7 @@ export default function Home() {
   const [doc, setDoc] = useState<{ id: string; name: string; chunks: number } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
+  const [copied, setCopied] = useState<number | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
 
@@ -85,6 +88,21 @@ export default function Home() {
     setChats((cs) =>
       cs.map((c) => (c.id === target ? { ...c, msgs: fn(c.msgs), at: Date.now() } : c))
     );
+  }
+
+  function copy(text: string, i: number) {
+    navigator.clipboard?.writeText(text);
+    setCopied(i);
+    setTimeout(() => setCopied(null), 1400);
+  }
+
+  function regenerate() {
+    // Drop the last exchange and resend the prompt. Sampling is stochastic, so
+    // a second attempt on a model this small is often materially better.
+    const lastUser = [...msgs].reverse().find((m) => m.role === "user");
+    if (!lastUser || busy) return;
+    patchActive((m) => m.slice(0, -2));
+    send(lastUser.text);
   }
 
   function grow() {
@@ -295,7 +313,13 @@ export default function Home() {
                 <div key={i} className={`turn ${m.role}`}>
                   <div className="who">{m.role === "user" ? "You" : "Sutra"}</div>
                   <div className="body">
-                    {m.text || (
+                    {m.text ? (
+                      m.role === "assistant" ? (
+                        <Markdown text={m.text} />
+                      ) : (
+                        m.text
+                      )
+                    ) : (
                       <span className="dots">
                         <i />
                         <i />
@@ -303,6 +327,16 @@ export default function Home() {
                       </span>
                     )}
                   </div>
+                  {m.role === "assistant" && m.text && !busy && (
+                    <div className="actions">
+                      <button onClick={() => copy(m.text, i)}>
+                        {copied === i ? "Copied" : "Copy"}
+                      </button>
+                      {i === msgs.length - 1 && (
+                        <button onClick={regenerate}>Regenerate</button>
+                      )}
+                    </div>
+                  )}
                   {m.sources?.length ? (
                     <details className="sources">
                       <summary>

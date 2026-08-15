@@ -101,10 +101,17 @@ export default function Home() {
     );
   }
 
-  function copy(text: string, i: number) {
-    navigator.clipboard?.writeText(text);
-    setCopied(i);
-    setTimeout(() => setCopied(null), 1400);
+  async function copy(text: string, i: number) {
+    // Wrapped because the Clipboard API is unavailable over plain HTTP and can
+    // reject outright on mobile browsers; a failed copy should do nothing
+    // rather than throw inside a click handler.
+    try {
+      await navigator.clipboard?.writeText(text);
+      setCopied(i);
+      setTimeout(() => setCopied(null), 1400);
+    } catch {
+      /* no clipboard access -- leave the button as it was */
+    }
   }
 
   function regenerate() {

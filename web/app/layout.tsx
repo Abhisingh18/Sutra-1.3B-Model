@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SessionProvider } from "next-auth/react";
 
 import { ProfileProvider } from "./profile";
 import "./globals.css";
@@ -17,9 +18,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {/* Makes the active profile available to the chat. Without one the app
-            behaves exactly as before -- a profile is additive, not a gate. */}
-        <ProfileProvider>{children}</ProfileProvider>
+        {/* Both providers are additive: with neither a session nor a profile
+            the app behaves exactly as it did before sign-in existed. */}
+        <SessionProvider>
+          <ProfileProvider>{children}</ProfileProvider>
+        </SessionProvider>
       </body>
     </html>
   );

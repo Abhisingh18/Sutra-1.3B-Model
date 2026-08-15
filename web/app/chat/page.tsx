@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Markdown } from "../markdown";
+import { SidebarAccount } from "../authbutton";
 import { useProfile } from "../profile";
 
 // Set in Vercel: Settings -> Environment Variables. This is the cloudflared
@@ -274,19 +275,7 @@ export default function Home() {
         </div>
 
         <div className="asidefoot">
-          {profile ? (
-            <div className="account">
-              <span className="avatar" style={{ background: profile.colour }}>
-                {profile.name.slice(0, 1)}
-              </span>
-              <span className="who2">{profile.name}</span>
-              <a href="/login">Switch</a>
-            </div>
-          ) : (
-            <a className="signin" href="/login">
-              Add a profile to keep chats separate
-            </a>
-          )}
+          <SidebarAccount />
           <span className={`status ${online ? "up" : online === false ? "down" : ""}`}>
             <i /> {online === null ? "checking" : online ? "online" : "offline"}
           </span>

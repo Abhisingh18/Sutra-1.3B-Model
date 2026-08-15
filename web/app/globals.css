@@ -1447,3 +1447,50 @@ td.win {
   font-size: 12.5px;
   text-align: center;
 }
+
+/* ---- google button / divider -------------------------------------------- */
+
+.or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.or::before,
+.or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+.signedin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  font-size: 14px;
+}
+
+.signedin img {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+}
+
+.signedin button {
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.signedin button:hover {
+  color: var(--accent);
+}

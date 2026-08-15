@@ -81,7 +81,11 @@ h1,
 
 /* ---- sidebar ------------------------------------------------------------ */
 
-aside {
+/* Scoped to .shell: this stylesheet is shared with the landing page, and a
+   bare `aside`, `header` or `main` here was landing on it too. The landing's
+   <header> became a flex row because of the rule below, which put the nav on
+   the left and the hero content on the right. */
+.shell aside {
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--line);
@@ -279,7 +283,7 @@ aside {
   min-width: 0;
 }
 
-header {
+.shell header {
   position: sticky;
   top: 0;
   z-index: 5;
@@ -310,7 +314,7 @@ header {
   text-overflow: ellipsis;
 }
 
-main {
+.shell main {
   flex: 1;
   width: 100%;
   max-width: 740px;
@@ -318,7 +322,7 @@ main {
   padding: 36px 24px 8px;
 }
 
-main.centered {
+.shell main.centered {
   display: flex;
   align-items: center;
 }
@@ -1248,7 +1252,7 @@ main.centered {
   text-align: left;
 }
 
-table {
+.tablewrap table {
   width: 100%;
   border-collapse: collapse;
   font-size: 15px;
@@ -1313,15 +1317,6 @@ td.win {
   position: relative;
 }
 
-.stages::before {
-  content: "";
-  position: absolute;
-  left: 19px;
-  top: 30px;
-  bottom: 30px;
-  width: 1px;
-  background: linear-gradient(to bottom, var(--accent), var(--accent));
-}
 
 .stages li {
   display: flex;
@@ -1881,17 +1876,6 @@ td.win {
   border-block: 1px solid var(--line-soft);
 }
 
-/* Section headings get a small ruled label above them, which is what gives a
-   long page its sense of chapters. */
-.platform > h2::before {
-  content: "";
-  display: block;
-  width: 40px;
-  height: 2px;
-  margin: 0 auto 20px;
-  border-radius: 2px;
-  background: linear-gradient(90deg, var(--saffron), var(--accent) 70%, var(--accent-deep));
-}
 
 /* Amber appears exactly once on the page: the winning column. A second blue
    there would be invisible against the first. */

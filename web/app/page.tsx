@@ -10,22 +10,27 @@ const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 type Src = { score: number; text: string; name: string };
 type Msg = { role: "user" | "assistant"; text: string; sources?: Src[] };
 
+// Chosen by testing, not by guessing. Every candidate was run through the
+// model and only the ones that produced usable output survived: lists and
+// short notes work, while "summarise this" invented dates that were not in
+// the text and "rewrite this politely" answered with a riddle. Trivia is
+// absent on purpose -- 18B training tokens do not buy reliable facts.
 const EXAMPLES = [
   {
-    title: "Write an email",
+    title: "Write a note",
+    body: "Write a thank you note to a colleague who helped me finish a project.",
+  },
+  {
+    title: "Give me tips",
+    body: "List five tips for studying effectively.",
+  },
+  {
+    title: "Make bullet points",
+    body: "Write five short bullet points about healthy eating.",
+  },
+  {
+    title: "Draft an email",
     body: "Write a short email to my manager asking for two days of leave.",
-  },
-  {
-    title: "Explain a concept",
-    body: "Explain photosynthesis in three sentences.",
-  },
-  {
-    title: "Summarise a topic",
-    body: "What is machine learning?",
-  },
-  {
-    title: "Make a list",
-    body: "List five healthy breakfast foods.",
   },
 ];
 
@@ -34,12 +39,15 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [online, setOnline] = useState<boolean | null>(null);
-  // Off by default until retrieval coverage improves. Measured recall@3 on the
-  // current index is 50%, and a miss is worse than no context at all: asked
-  // "what is light" it retrieved a plant passage and answered about plants,
-  // where with no context it at least stayed on topic.
-  const [rag, setRag] = useState(false);
-  const [hasRag, setHasRag] = useState(false);
+  // No Wikipedia retrieval. Four indexes were built -- 60k, 500k, 400k
+  // shuffled, 150k length-filtered -- and recall@3 never moved off 50%.
+  // The cause is arithmetic, not a bug: any few-hundred-thousand sample is
+  // 2-6% of Wikipedia, so a question about one specific article misses most
+  // of the time, and a confident wrong passage is worse than none. Covering
+  // it properly means ~29 GB of embeddings and a disk-backed index.
+  //
+  // Uploaded documents have no such problem: coverage is total by
+  // construction, which is what makes that the feature worth shipping.
   const [canUpload, setCanUpload] = useState(false);
   const [doc, setDoc] = useState<{ id: string; name: string; chunks: number } | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -56,7 +64,6 @@ export default function Home() {
           setOnline(r.ok);
           if (r.ok) {
             const h = await r.json();
-            setHasRag(Boolean(h.rag));
             setCanUpload(Boolean(h.upload));
           }
         })
@@ -92,7 +99,6 @@ export default function Home() {
           message: text,
           max_tokens: 512,
           temperature: 0.5,
-          rag: rag && hasRag,
           doc_id: doc?.id ?? null,
         }),
       });
@@ -202,6 +208,8 @@ export default function Home() {
             <p className="lede">
               A 1.32B-parameter Mixture-of-Experts model pretrained on 18B tokens,
               then tuned with SFT and DPO. Only 0.28B parameters run per token.
+              It writes and rewrites well; for anything factual, upload a
+              document and it will answer from that.
             </p>
             <div className="cards">
               {EXAMPLES.map((e) => (
@@ -294,14 +302,10 @@ export default function Home() {
               <button onClick={() => setDoc(null)} aria-label="Remove">×</button>
             </span>
           )}
-          {hasRag && !doc && (
-            <button
-              className={`tool ${rag ? "on" : ""}`}
-              onClick={() => setRag(!rag)}
-              title="Look the answer up in Wikipedia before replying"
-            >
-              {rag ? "✓ " : ""}Wikipedia
-            </button>
+          {!doc && (
+            <span className="hint">
+              Upload a document to get answers grounded in it
+            </span>
           )}
         </div>
         <p className="disclaimer">

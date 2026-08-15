@@ -10,9 +10,7 @@
 
 # Retrieval indexes. Rebuild with:
 #   python -m src.rag.ingest --docs 60000 --out rag_index_big
-rag_index/
-rag_index_big/
-rag_index_full/
+rag_index*/
 
 .venv/
 venv/

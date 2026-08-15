@@ -847,10 +847,10 @@ main.centered {
   top: 14px;
   z-index: 20;
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
   align-items: center;
-  gap: 20px;
-  max-width: 1100px;
+  gap: 28px;
+  max-width: 1120px;
   margin: 16px auto 0;
   padding: 10px 10px 10px 24px;
   background: rgba(255, 255, 255, 0.78);
@@ -864,6 +864,11 @@ main.centered {
   display: inline-flex;
   align-items: center;
   gap: 9px;
+  /* The wordmark is three inline pieces; without this the grid track can
+     squeeze it and break "स / sutra / .ai" onto three lines. */
+  white-space: nowrap;
+  flex: none;
+  justify-self: start;
   font-family: var(--font-display), Georgia, serif;
   font-weight: 600;
   font-size: 22px;
@@ -873,6 +878,7 @@ main.centered {
 }
 
 .logomark {
+  flex: none;
   width: 30px;
   height: 30px;
   display: grid;
@@ -897,8 +903,9 @@ main.centered {
 .navlinks {
   display: flex;
   justify-content: center;
-  gap: 30px;
+  gap: 28px;
   white-space: nowrap;
+  justify-self: center;
 }
 
 .navlinks a {
@@ -938,6 +945,8 @@ main.centered {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  justify-self: end;
+  white-space: nowrap;
 }
 
 /* ---- buttons ------------------------------------------------------------ */
@@ -1428,7 +1437,7 @@ td.win {
 
 @media (max-width: 880px) {
   .lnav {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: max-content 1fr;
   }
 
   .navlinks {
@@ -2056,5 +2065,17 @@ td.win {
 
   .demo {
     margin-top: 40px;
+  }
+}
+
+/* The three-column nav needs room for links plus both buttons. Below ~1080px
+   the links are the first thing to go, before anything is allowed to wrap. */
+@media (max-width: 1080px) {
+  .lnav {
+    grid-template-columns: max-content 1fr;
+  }
+
+  .navlinks {
+    display: none;
   }
 }

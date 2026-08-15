@@ -820,19 +820,25 @@ main.centered {
     linear-gradient(180deg, var(--sky-soft) 0%, transparent 58%);
 }
 
+/* Three columns, not space-between. With space-between the centre group
+   drifts left or right as the logo and the buttons change width; a grid with
+   equal outer tracks keeps the links optically centred whatever they contain. */
 .lnav {
-  display: flex;
+  position: sticky;
+  top: 14px;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 20px;
-  max-width: 1140px;
-  margin: 18px auto 0;
-  padding: 13px 13px 13px 26px;
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(14px) saturate(140%);
+  max-width: 1100px;
+  margin: 16px auto 0;
+  padding: 10px 10px 10px 24px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(16px) saturate(150%);
   border: 1px solid var(--line);
   border-radius: 999px;
-  box-shadow: 0 6px 24px rgba(26, 22, 20, 0.06);
+  box-shadow: 0 6px 24px rgba(15, 23, 41, 0.07);
 }
 
 .logo {
@@ -850,27 +856,48 @@ main.centered {
 
 .navlinks {
   display: flex;
-  gap: 32px;
+  justify-content: center;
+  gap: 30px;
+  white-space: nowrap;
 }
 
 .navlinks a {
-  color: var(--ink);
-  font-size: 13.5px;
+  position: relative;
+  color: var(--fg-soft);
+  font-size: 13px;
   font-weight: 500;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   text-decoration: none;
-  opacity: 0.82;
-  transition: opacity 0.2s;
+  padding: 4px 0;
+  transition: color 0.18s;
+}
+
+.navlinks a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 1.5px;
+  border-radius: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transition: transform 0.18s ease;
 }
 
 .navlinks a:hover {
-  opacity: 1;
+  color: var(--ink);
+}
+
+.navlinks a:hover::after {
+  transform: scaleX(1);
 }
 
 .navcta {
   display: flex;
-  gap: 10px;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 /* ---- buttons ------------------------------------------------------------ */
@@ -967,6 +994,11 @@ main.centered {
   gap: 13px;
   justify-content: center;
   margin-top: 38px;
+}
+
+.navcta .btn {
+  padding: 9px 20px;
+  font-size: 13.5px;
 }
 
 .hero-cta .btn {
@@ -1338,6 +1370,10 @@ td.win {
 }
 
 @media (max-width: 880px) {
+  .lnav {
+    grid-template-columns: 1fr auto;
+  }
+
   .navlinks {
     display: none;
   }

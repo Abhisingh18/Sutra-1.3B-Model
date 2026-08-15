@@ -9,10 +9,10 @@
   --fg: #1a1614;
   --fg-soft: #4a423d;
   --muted: #857b74;
-  --cream: #fdfaf6;
-  --bg: #fdfaf6;
+  --cream: #ffffff;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --raised: #f7f2ea;
+  --raised: #f7f8fa;
 
   --accent: #ff7a1a;
   --accent-hi: #ff9d4a;
@@ -832,14 +832,15 @@ main.centered {
 .hero {
   position: relative;
   overflow: hidden;
-  padding-bottom: 90px;
+  padding-bottom: 84px;
+  /* A tint, not a field. The page reads white first and picks up warmth
+     second. */
   background: radial-gradient(
-    120% 70% at 50% -10%,
-    var(--accent) 0%,
-    var(--accent) 16%,
-    color-mix(in srgb, var(--accent-hi) 62%, transparent) 33%,
-    color-mix(in srgb, var(--lav) 58%, transparent) 61%,
-    var(--cream) 89%
+    120% 66% at 50% -14%,
+    color-mix(in srgb, var(--accent) 30%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 16%, transparent) 26%,
+    color-mix(in srgb, var(--lav) 22%, transparent) 54%,
+    var(--bg) 84%
   );
 }
 
@@ -851,11 +852,11 @@ main.centered {
   max-width: 1140px;
   margin: 18px auto 0;
   padding: 13px 13px 13px 26px;
-  background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid var(--line);
   border-radius: 999px;
-  box-shadow: 0 8px 30px rgba(244, 93, 0, 0.08);
+  box-shadow: 0 6px 24px rgba(26, 22, 20, 0.06);
 }
 
 .logo {
@@ -945,10 +946,10 @@ main.centered {
 }
 
 .ornament {
-  color: #fff;
+  color: var(--accent-deep);
   font-size: 24px;
   letter-spacing: 6px;
-  opacity: 0.92;
+  opacity: 0.75;
   margin-bottom: 18px;
 }
 
@@ -957,7 +958,7 @@ main.centered {
   width: 210px;
   height: 1px;
   margin: 16px auto 0;
-  background: rgba(255, 255, 255, 0.6);
+  background: color-mix(in srgb, var(--accent) 32%, transparent);
 }
 
 .eyebrow {
@@ -1412,10 +1413,10 @@ td.win {
   transform: translateX(-50%);
   background: radial-gradient(
     120% 90% at 50% -30%,
-    var(--accent) 0%,
-    color-mix(in srgb, var(--accent-hi) 55%, transparent) 32%,
-    color-mix(in srgb, var(--lav) 45%, transparent) 62%,
-    transparent 88%
+    color-mix(in srgb, var(--accent) 26%, transparent) 0%,
+    color-mix(in srgb, var(--accent) 12%, transparent) 34%,
+    color-mix(in srgb, var(--lav) 16%, transparent) 62%,
+    transparent 86%
   );
   pointer-events: none;
 }

@@ -61,7 +61,8 @@ export default function LoginClient({
             <h1>Who is chatting?</h1>
             <p>
               Sign in to keep your conversations separate from anyone else using
-              this browser. The model answers either way.
+              this browser. The model answers either way — an account is only
+              ever about whose chat history is whose.
             </p>
 
             <GoogleButton configured={googleConfigured} />

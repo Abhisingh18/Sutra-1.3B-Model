@@ -47,9 +47,9 @@ const STAGES = [
 export default function Landing() {
   return (
     <>
-      {/* The sunrise sits on the header itself rather than a floating layer, so
-          the gradient ends exactly where the content does. */}
-      <header className="hero">
+      {/* A page-level bar pinned to the top edge, above the hero rather than
+          floating inside it. */}
+      <header className="topbar">
         <nav className="lnav">
           <Link href="/" className="logo">
             <span className="logomark">स</span>
@@ -70,7 +70,9 @@ export default function Landing() {
             </Link>
           </div>
         </nav>
+      </header>
 
+      <section className="hero">
         <div className="wrap hero-inner">
           <div className="eyebrow">
             <span className="pipdot" />
@@ -156,7 +158,7 @@ export default function Landing() {
             </dl>
           </div>
         </div>
-      </header>
+      </section>
 
       <section id="architecture" className="platform wrap">
         <h2>Mixture of Experts, with latent attention</h2>

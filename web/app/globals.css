@@ -820,6 +820,7 @@ main.centered {
   position: relative;
   overflow: hidden;
   padding-bottom: 96px;
+  margin-top: 0;
   /* A tint, not a field. The page reads white first and picks up warmth
      second. */
   background:
@@ -845,22 +846,26 @@ main.centered {
 /* Three columns, not space-between. With space-between the centre group
    drifts left or right as the logo and the buttons change width; a grid with
    equal outer tracks keeps the links optically centred whatever they contain. */
-.lnav {
+/* A full-width bar pinned to the top edge, not a floating capsule. Three
+   columns with non-shrinking outer tracks keep the links optically centred and
+   stop the wordmark ever wrapping. */
+.topbar {
   position: sticky;
-  top: 14px;
-  z-index: 20;
+  top: 0;
+  z-index: 30;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(16px) saturate(150%);
+  border-bottom: 1px solid var(--line);
+}
+
+.lnav {
   display: grid;
   grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
   align-items: center;
   gap: 28px;
-  max-width: 1120px;
-  margin: 16px auto 0;
-  padding: 10px 10px 10px 24px;
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(16px) saturate(150%);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  box-shadow: 0 6px 24px rgba(15, 23, 41, 0.07);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 24px;
 }
 
 .logo {
@@ -997,7 +1002,7 @@ main.centered {
 
 .hero-inner {
   text-align: center;
-  padding-top: 74px;
+  padding-top: 78px;
 }
 
 .ornament {
@@ -2080,5 +2085,19 @@ td.win {
 
   .navlinks {
     display: none;
+  }
+}
+
+/* The bar sits on white above the wash, so its links need no special
+   treatment -- but the buttons inside it stay smaller than the hero's. */
+.topbar .btn {
+  padding: 9px 18px;
+  font-size: 13.5px;
+}
+
+@media (max-width: 1080px) {
+  .lnav {
+    grid-template-columns: max-content 1fr;
+    padding-inline: 16px;
   }
 }

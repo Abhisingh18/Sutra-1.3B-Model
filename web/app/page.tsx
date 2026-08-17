@@ -58,7 +58,7 @@ export default function Landing() {
             sutra<span className="tld">.ai</span>
           </Link>
           <div className="navlinks">
-            <a href="#architecture">Architecture</a>
+            <Link href="/architecture">Architecture</Link>
             <a href="#results">Results</a>
             <a href="#pipeline">Pipeline</a>
             <a href="https://github.com/Abhisingh18/Sutra-1.3B-Model">Code</a>
@@ -200,6 +200,11 @@ export default function Landing() {
             </p>
           </article>
         </div>
+        <p className="lead readmore">
+          <Link href="/architecture">
+            Read the full architecture and workflow →
+          </Link>
+        </p>
       </section>
 
       <section id="results" className="platform wrap">

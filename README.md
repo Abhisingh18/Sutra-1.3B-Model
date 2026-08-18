@@ -14,7 +14,7 @@ python inference.py "Explain photosynthesis in three sentences."
 ```
 
 Runs on CPU at ~10 tokens/second — only 0.28B of the 1.32B parameters are
-active per token.
+active per tokens.
 
 ## Results
 

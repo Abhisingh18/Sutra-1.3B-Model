@@ -50,7 +50,14 @@ start_server() {
   sleep 2
 
   say "starting model server on :$PORT"
-  "$PY" -m deploy.server --port "$PORT" $WEB_FLAG >>"$ROOT/logs_server.txt" 2>&1 &
+  # The Wikipedia index rides along only when it exists on disk. With the
+  # relevance gate it costs nothing to have on: measured over the probe set it
+  # answers 7 of 16 from a cited passage and hands over a wrong one 0 times.
+  RAG_FLAG=""
+  [ -d "$ROOT/rag_index_v4" ] && RAG_FLAG="--rag-index $ROOT/rag_index_v4"
+
+  "$PY" -m deploy.server --port "$PORT" $WEB_FLAG $RAG_FLAG \
+    >>"$ROOT/logs_server.txt" 2>&1 &
   SERVER_PID=$!
   # Loading 5.3 GB of weights takes the better part of a minute. Health checks
   # must not run before then, or every start is killed mid-load and the

@@ -40,6 +40,10 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
   const [online, setOnline] = useState<boolean | null>(null);
   const [canUpload, setCanUpload] = useState(false);
+  // Off by default. Search costs a call per message, and most of what this
+  // model is good at -- writing, rewriting, formatting -- needs no lookup.
+  const [canWeb, setCanWeb] = useState(false);
+  const [web, setWeb] = useState(false);
   const [doc, setDoc] = useState<{ id: string; name: string; chunks: number } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
@@ -79,7 +83,11 @@ export default function Home() {
       backendUrl().then((api) => fetch(`${api}/health`))
         .then(async (r) => {
           setOnline(r.ok);
-          if (r.ok) setCanUpload(Boolean((await r.json()).upload));
+          if (r.ok) {
+            const h = await r.json();
+            setCanUpload(Boolean(h.upload));
+            setCanWeb(Boolean(h.web));
+          }
         })
         .catch(() => {
           // A dead hostname is the usual cause; drop it so the next poll
@@ -164,6 +172,8 @@ export default function Home() {
           max_tokens: 512,
           temperature: 0.5,
           doc_id: doc?.id ?? null,
+          // An uploaded document always wins: the user picked that corpus.
+          web: web && canWeb && !doc,
         }),
       });
       if (!res.body) throw new Error("no stream");
@@ -429,6 +439,15 @@ export default function Home() {
                 />
                 {uploading ? "Indexing…" : "＋ Upload a document"}
               </label>
+            )}
+            {canWeb && !doc && (
+              <button
+                className={`tool ${web ? "on" : ""}`}
+                onClick={() => setWeb(!web)}
+                title="Look the answer up on the web before replying"
+              >
+                {web ? "✓ " : ""}Search the web
+              </button>
             )}
             {doc && (
               <span className="chip">

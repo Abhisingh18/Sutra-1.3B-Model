@@ -2785,3 +2785,11 @@ td.win {
 .readmore a:hover {
   color: var(--saffron-deep);
 }
+
+/* An engaged tool chip. Used by the web-search toggle; the upload control is a
+   file input and reports its state through the chip beside it instead. */
+.tool.on {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}

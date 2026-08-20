@@ -50,6 +50,7 @@ class ChatRequest(BaseModel):
     max_tokens: int = 512
     temperature: float = 0.5
     rag: bool = False
+    web: bool = False
     doc_id: str | None = None
 
 
@@ -57,6 +58,7 @@ class ChatRequest(BaseModel):
 def health():
     return {"status": "ok", "model": STATE.get("desc", "not loaded"),
             "rag": STATE.get("retriever") is not None,
+            "web": STATE.get("web") is not None,
             "upload": STATE.get("docstore") is not None}
 
 
@@ -90,6 +92,12 @@ def generate_tokens(req: ChatRequest):
         # An uploaded document wins over Wikipedia: the user chose this corpus,
         # and unlike the wiki index it is guaranteed to cover their question.
         hits = STATE["docstore"].search(req.doc_id, req.message, k=4)
+        if hits:
+            question = build_prompt(req.message, hits, max_chars=2600)
+            used = hits
+    elif req.web and STATE.get("web") is not None:
+        # Live search, for anything the Wikipedia snapshot predates.
+        hits = STATE["web"].search(req.message, k=4)
         if hits:
             question = build_prompt(req.message, hits, max_chars=2600)
             used = hits
@@ -186,6 +194,9 @@ def main():
     ap.add_argument("--rag-index", help="enable retrieval from this index dir")
     ap.add_argument("--no-upload", action="store_true",
                     help="disable the /upload endpoint")
+    ap.add_argument("--web", action="store_true",
+                    help="enable live web search (needs TAVILY_API_KEY or "
+                         "BRAVE_API_KEY in the environment)")
     ap.add_argument("--host", default="0.0.0.0")
     ap.add_argument("--port", type=int, default=8000)
     args = ap.parse_args()
@@ -198,7 +209,18 @@ def main():
 
     STATE.update(model=model, mcfg=mcfg, device=device,
                  tok=Tokenizer.from_file(args.tokenizer),
-                 desc=describe(model, mcfg), retriever=None, docstore=None)
+                 desc=describe(model, mcfg), retriever=None, docstore=None,
+                 web=None)
+
+    if args.web:
+        from src.rag.web import WebRetriever, available_provider
+        prov = available_provider()
+        if prov is None:
+            # Refuse rather than start a server whose web toggle silently does
+            # nothing -- that failure is invisible from the browser.
+            raise SystemExit("--web needs TAVILY_API_KEY or BRAVE_API_KEY")
+        STATE["web"] = WebRetriever(prov)
+        print(f"web search: {prov}")
 
     if args.rag_index:
         from src.rag.retrieve import Retriever

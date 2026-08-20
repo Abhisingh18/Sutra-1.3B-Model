@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: #2549c7; }
+    a:hover { color: #ff7a1a; }
+  </style>
+</helmet>
+<div style="width: 1080px; height: 1350px; background: #fbfbfa; color: #10131c; font-family: 'Bricolage Grotesque', 'Helvetica Neue', sans-serif; display: flex; flex-direction: column; gap: 38px; padding: 76px; box-sizing: border-box; overflow: hidden;">
+
+  <div style="display: flex; justify-content: space-between; align-items: baseline;">
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 26px; letter-spacing: 0.1em; text-transform: uppercase; color: {{accent}};">The whole trick</span>
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 22px; letter-spacing: 0.14em; color: #6b7280;">3 / 5</span>
+  </div>
+
+  <h2 style="margin: 0; font-size: 82px; line-height: 0.96; font-weight: 800; letter-spacing: -0.04em;">49 experts sit.<br>Five fire.</h2>
+
+  <p style="margin: 0; font-size: 30px; line-height: 1.42; color: #3c4353; max-width: 30ch;">In each MoE layer a router scores 48 experts and keeps the best four. One shared expert always runs. The other 44 are never touched for that token.</p>
+
+  <div style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 10px;">
+    <sc-for list="{{experts}}" as="e" hint-placeholder-count="48">
+      <div style="aspect-ratio: 1; border-radius: 6px; background: {{e.bg}}; border: {{e.bd}};"></div>
+    </sc-for>
+  </div>
+
+  <div style="display: flex; gap: 34px; flex-wrap: wrap; font-family: 'JetBrains Mono', monospace; font-size: 22px; color: #3c4353;">
+    <span style="display: flex; align-items: center; gap: 12px;"><i style="width: 22px; height: 22px; border-radius: 5px; background: {{accent}};"></i>4 routed</span>
+    <span style="display: flex; align-items: center; gap: 12px;"><i style="width: 22px; height: 22px; border-radius: 5px; background: #e9ebf0; border: 2px solid #cfd4de;"></i>44 idle</span>
+    <span style="display: flex; align-items: center; gap: 12px;"><i style="width: 22px; height: 22px; border-radius: 50%; background: {{indigo}};"></i>1 shared</span>
+  </div>
+
+  <div style="margin-top: auto; background: #10131c; color: #fbfbfa; border-radius: 16px; padding: 36px 40px; display: flex; flex-direction: column; gap: 14px;">
+    <p style="margin: 0; font-size: 34px; line-height: 1.3; font-weight: 600; letter-spacing: -0.02em;">Capacity comes from memory. Cost comes from compute.</p>
+    <p style="margin: 0; font-size: 24px; line-height: 1.5; color: #a6adbb;">Adding experts raises the parameter count without raising the work per token. That is why 1.32B parameters answer on a CPU at ten tokens a second.</p>
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"#ff7a1a","options":["#ff7a1a","#e8611a","#c2410c","#d97706"]},"indigo":{"editor":"color","default":"#2549c7","options":["#2549c7","#1a327f","#3730a3","#1d4ed8"]},"$preview":{"width":1080,"height":1350}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#ff7a1a';
+    const indigo = this.props.indigo ?? '#2549c7';
+    // Which four light up is arbitrary; the figure has to read as a ratio, so
+    // they are spread rather than clustered. Routed cells are solid accent and
+    // idle cells are outlined -- fill versus outline survives a greyscale print,
+    // where two mid-tone hues would not.
+    const routed = [5, 17, 26, 39];
+    const experts = [];
+    for (let i = 0; i < 48; i++) {
+      const on = routed.indexOf(i) !== -1;
+      experts.push({
+        bg: on ? accent : '#e9ebf0',
+        bd: on ? '2px solid ' + accent : '2px solid #cfd4de'
+      });
+    }
+    return { accent, indigo, experts };
+  }
+}
+</script>
+</body>
+</html>

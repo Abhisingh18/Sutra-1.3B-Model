@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: #2549c7; }
+    a:hover { color: #ff7a1a; }
+  </style>
+</helmet>
+<div style="width: 1080px; height: 1350px; background: #10131c; color: #fbfbfa; font-family: 'Bricolage Grotesque', 'Helvetica Neue', sans-serif; display: flex; flex-direction: column; justify-content: space-between; padding: 76px; box-sizing: border-box; overflow: hidden;">
+
+  <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+    <span style="width: 62px; height: 62px; border-radius: 17px; background: linear-gradient(140deg, {{accent}}, {{indigo}}); color: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 600;">स</span>
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 22px; letter-spacing: 0.14em; color: #6b7280;">5 / 5</span>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 40px;">
+    <h2 style="margin: 0; font-size: 84px; line-height: 0.96; font-weight: 800; letter-spacing: -0.04em;">The weights and the code are open.</h2>
+
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px;">
+      <sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+        <div style="border: 2px solid #2b3140; border-radius: 14px; padding: 26px 28px; display: flex; flex-direction: column; gap: 10px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 44px; font-weight: 700; letter-spacing: -0.03em; color: {{s.tint}};">{{s.big}}</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 20px; line-height: 1.4; color: #98a0b0; white-space: pre-line;">{{s.label}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 22px;">
+    <p style="margin: 0; font-size: 28px; line-height: 1.45; color: #cdd3dd;">Everything is there &mdash; the tokenizer, the data pipeline, the training loop, the evaluation, and the six silent bugs that cost me the most time.</p>
+    <div style="display: flex; flex-direction: column; gap: 10px; font-family: 'JetBrains Mono', monospace; font-size: 25px;">
+      <span style="color: {{accent}};">github.com/Abhisingh18/Sutra-1.3B-Model</span>
+      <span style="color: {{accent}};">huggingface.co/Abhisingh-18/Sutra-1.3B-Chat</span>
+    </div>
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"#ff7a1a","options":["#ff7a1a","#e8611a","#c2410c","#d97706"]},"indigo":{"editor":"color","default":"#2549c7","options":["#2549c7","#1a327f","#3730a3","#1d4ed8"]},"$preview":{"width":1080,"height":1350}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#ff7a1a';
+    const indigo = this.props.indigo ?? '#2549c7';
+    const stats = [
+      { big: '1.32B', label: 'parameters stored', tint: '#fbfbfa' },
+      { big: '0.28B', label: 'active per token\n4.71x sparse', tint: accent },
+      { big: '18B', label: 'tokens of pretraining', tint: '#fbfbfa' },
+      { big: '11', label: 'days, tokenizer\nto deployed', tint: accent }
+    ];
+    return { accent, indigo, stats };
+  }
+}
+</script>
+</body>
+</html>

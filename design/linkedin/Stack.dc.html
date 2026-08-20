@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: #2549c7; }
+    a:hover { color: #ff7a1a; }
+  </style>
+</helmet>
+<div style="width: 1080px; height: 1350px; background: #fbfbfa; color: #10131c; font-family: 'Bricolage Grotesque', 'Helvetica Neue', sans-serif; display: flex; flex-direction: column; gap: 40px; padding: 76px; box-sizing: border-box; overflow: hidden;">
+
+  <div style="display: flex; justify-content: space-between; align-items: baseline;">
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 26px; letter-spacing: 0.1em; text-transform: uppercase; color: {{indigo}};">What&#39;s inside</span>
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 22px; letter-spacing: 0.14em; color: #6b7280;">2 / 5</span>
+  </div>
+
+  <h2 style="margin: 0; font-size: 76px; line-height: 0.98; font-weight: 800; letter-spacing: -0.04em;">Sixteen blocks, stacked.</h2>
+
+  <div style="display: flex; flex-direction: column; gap: 12px;">
+
+    <div style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: #6b7280;">tokens in</div>
+
+    <div style="padding: 22px 28px; border: 3px solid #10131c; border-radius: 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 16px;">
+      <span style="font-size: 32px; font-weight: 600;">Token Embedding</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 22px; color: #6b7280;">48,000 &rarr; 1024</span>
+    </div>
+
+    <div style="border: 3px solid #10131c; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 22px; letter-spacing: 0.12em; text-transform: uppercase; color: #6b7280;">Decoder block</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 34px; font-weight: 700;">&times; 16</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 18px;">
+        <span style="width: 14px; height: 14px; border-radius: 50%; background: {{indigo}}; flex-shrink: 0;"></span>
+        <div style="flex-grow: 1; padding: 20px 24px; border: 3px solid {{indigo}}; border-radius: 10px; background: #eef2fd; display: flex; justify-content: space-between; align-items: baseline; gap: 14px;">
+          <span style="font-size: 30px; font-weight: 600;">Latent attention</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 21px; color: #4b5261;">16 heads</span>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 18px;">
+        <span style="width: 14px; height: 14px; border-radius: 3px; background: {{accent}}; flex-shrink: 0;"></span>
+        <div style="flex-grow: 1; padding: 20px 24px; border: 3px dashed {{accent}}; border-radius: 10px; background: #fff3e8; display: flex; justify-content: space-between; align-items: baseline; gap: 14px;">
+          <span style="font-size: 30px; font-weight: 600;">Mixture of Experts</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 21px; color: #4b5261;">48 + 1</span>
+        </div>
+      </div>
+
+      <p style="margin: 0; font-size: 22px; line-height: 1.5; color: #3c4353;">Both sublayers are wrapped in a residual, normalised before they run. Layer 0 is the one exception &mdash; its feed-forward stays dense.</p>
+    </div>
+
+    <div style="padding: 22px 28px; border: 3px solid #10131c; border-radius: 12px; display: flex; justify-content: space-between; align-items: baseline; gap: 16px;">
+      <span style="font-size: 32px; font-weight: 600;">Output head</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 22px; color: #6b7280;">1024 &rarr; 48,000</span>
+    </div>
+
+    <div style="font-family: 'JetBrains Mono', monospace; font-size: 24px; color: #6b7280;">next token out</div>
+  </div>
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"#ff7a1a","options":["#ff7a1a","#e8611a","#c2410c","#d97706"]},"indigo":{"editor":"color","default":"#2549c7","options":["#2549c7","#1a327f","#3730a3","#1d4ed8"]},"$preview":{"width":1080,"height":1350}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      accent: this.props.accent ?? '#ff7a1a',
+      indigo: this.props.indigo ?? '#2549c7'
+    };
+  }
+}
+</script>
+</body>
+</html>

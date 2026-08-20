@@ -9,15 +9,32 @@ tags:
   - mixture-of-experts
   - moe
   - mla
+  - multi-head-latent-attention
+  - deepseek
   - from-scratch
+  - pretraining
   - custom-architecture
+  - pytorch
+  - sparse
+  - hindi
+  - indic
 ---
 
 # Sutra-1.3B
 
-A 1.32B-parameter Mixture-of-Experts language model **trained from scratch** —
-own tokenizer, own data pipeline, own training loop. No pretrained weights, no
-`transformers` Trainer anywhere in the stack.
+A 1.32B-parameter **Mixture-of-Experts** language model **pretrained from
+scratch** in pure PyTorch, with **Multi-head Latent Attention (MLA)** and
+DeepSeek-style **auxiliary-loss-free expert routing** — implemented from the
+papers, not adapted from an existing codebase.
+
+Own BPE tokenizer, own streaming data pipeline, own training loop. No
+pretrained weights, no `transformers` Trainer, no reference implementation
+anywhere in the stack.
+
+**If you are here to learn how a MoE model is trained end to end**, the code is
+the point: [github.com/Abhisingh18/Sutra-1.3B-Model](https://github.com/Abhisingh18/Sutra-1.3B-Model)
+carries the tokenizer, data prep, pretraining, SFT, DPO, evaluation and serving
+— plus the six silent bugs that cost the most time, written up in full.
 
 ## Quick start
 

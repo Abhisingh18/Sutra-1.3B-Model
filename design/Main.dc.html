@@ -1,0 +1,203 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&display=swap">
+  <style>
+    body { margin: 0; }
+    a { color: #2549c7; }
+    a:hover { color: #ff7a1a; }
+  </style>
+</helmet>
+
+<div style="width: 1123px; height: 1587px; background: #fbfbfa; color: #10131c; font-family: 'Bricolage Grotesque', 'Helvetica Neue', sans-serif; display: flex; flex-direction: column; overflow: hidden;">
+
+  <!-- ============================================ masthead -->
+  <div style="padding: 64px 64px 0; display: flex; flex-direction: column; gap: 18px;">
+
+    <div style="display: flex; align-items: center; gap: 14px; font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; color: #6b7280;">
+      <span style="width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(140deg, {{accent}}, {{indigo}}); color: #ffffff; display: flex; align-items: center; justify-content: center; font-family: 'Bricolage Grotesque', sans-serif; font-size: 18px; font-weight: 600; letter-spacing: 0;">स</span>
+      <span>Mixture of Experts &middot; built from scratch</span>
+    </div>
+
+    <h1 style="margin: 0; font-size: 148px; line-height: 0.86; font-weight: 800; letter-spacing: -0.05em;">Sutra<span style="color: {{accent}};">-</span>1.3B</h1>
+
+    <div style="display: flex; align-items: baseline; gap: 20px; flex-wrap: wrap;">
+      <p style="margin: 0; font-size: 34px; line-height: 1.15; font-weight: 400; letter-spacing: -0.02em; max-width: 20ch;">49 experts sit in every layer. <span style="color: {{indigo}}; font-weight: 600;">Five fire.</span></p>
+      <p style="margin: 0; font-size: 17px; line-height: 1.5; color: #4b5261; max-width: 34ch; font-family: 'JetBrains Mono', monospace;">Own tokenizer, own data pipeline, own training loop. 18B tokens, 4&times; RTX 6000 Ada, eleven days.</p>
+    </div>
+  </div>
+
+  <div style="height: 3px; margin: 40px 64px 0; background: linear-gradient(90deg, {{accent}}, {{indigo}});"></div>
+
+  <!-- ============================================ body -->
+  <div style="flex-grow: 1; display: grid; grid-template-columns: 430px minmax(0, 1fr); gap: 46px; padding: 40px 64px 0;">
+
+    <!-- ---------------------------------------- the stack -->
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #6b7280;">The stack</span>
+
+      <div style="display: flex; flex-direction: column; gap: 7px; align-items: stretch;">
+
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #6b7280; padding-bottom: 2px;">input_ids &nbsp;[B, 4096]</div>
+
+        <div style="padding: 15px 18px; border: 2px solid #10131c; border-radius: 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px;">
+          <span style="font-size: 19px; font-weight: 600;">Token Embedding</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #6b7280;">48,000 &rarr; 1024</span>
+        </div>
+
+        <div style="width: 2px; height: 16px; background: #10131c; align-self: center;"></div>
+
+        <!-- the repeated block -->
+        <div style="border: 2px solid {{indigo}}; border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: #f4f6fd;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: {{indigo}};">Decoder block</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; color: {{indigo}};">&times; 16</span>
+          </div>
+
+          <div style="display: flex; align-items: stretch; gap: 12px;">
+            <div style="width: 22px; border-left: 2px solid {{indigo}}; border-top: 2px solid {{indigo}}; border-bottom: 2px solid {{indigo}}; border-radius: 7px 0 0 7px;"></div>
+            <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 7px;">
+              <div style="padding: 9px 14px; background: #ffffff; border: 1px solid #d6dae4; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 14px;">RMSNorm</div>
+              <div style="padding: 12px 14px; background: #ffffff; border: 2px solid {{indigo}}; border-radius: 6px; display: flex; justify-content: space-between; align-items: baseline;">
+                <span style="font-size: 17px; font-weight: 600;">MLA Attention</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6b7280;">16 heads</span>
+              </div>
+              <div style="padding: 8px 14px; background: {{indigo}}; color: #ffffff; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: center;">Add &nbsp;&larr;&nbsp; residual</div>
+            </div>
+          </div>
+
+          <div style="display: flex; align-items: stretch; gap: 12px;">
+            <div style="width: 22px; border-left: 2px solid {{accent}}; border-top: 2px solid {{accent}}; border-bottom: 2px solid {{accent}}; border-radius: 7px 0 0 7px;"></div>
+            <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 7px;">
+              <div style="padding: 9px 14px; background: #ffffff; border: 1px solid #d6dae4; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 14px;">RMSNorm</div>
+              <div style="padding: 12px 14px; background: #ffffff; border: 2px solid {{accent}}; border-radius: 6px; display: flex; justify-content: space-between; align-items: baseline;">
+                <span style="font-size: 17px; font-weight: 600;">MoE Feed-Forward</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #6b7280;">48 + 1</span>
+              </div>
+              <div style="padding: 8px 14px; background: {{accent}}; color: #ffffff; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 13px; text-align: center;">Add &nbsp;&larr;&nbsp; residual</div>
+            </div>
+          </div>
+
+          <p style="margin: 2px 0 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.5; color: #4b5261;">Layer 0 is the exception &mdash; its FFN is plain dense. Routing on raw embeddings is near-random and collapses before it can learn.</p>
+        </div>
+
+        <div style="width: 2px; height: 16px; background: #10131c; align-self: center;"></div>
+
+        <div style="padding: 13px 18px; border: 2px solid #10131c; border-radius: 8px; font-family: 'JetBrains Mono', monospace; font-size: 15px;">RMSNorm</div>
+
+        <div style="padding: 15px 18px; border: 2px solid #10131c; border-radius: 8px; display: flex; justify-content: space-between; align-items: baseline; gap: 12px;">
+          <span style="font-size: 19px; font-weight: 600;">lm_head</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #6b7280;">1024 &rarr; 48,000</span>
+        </div>
+
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #6b7280; padding-top: 2px;">logits &nbsp;[B, 4096, 48000]</div>
+      </div>
+    </div>
+
+    <!-- ---------------------------------------- internals -->
+    <div style="display: flex; flex-direction: column; gap: 26px;">
+
+      <!-- MoE -->
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 16px;">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: {{accent}};">Inside the MoE</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #6b7280;">layers 1&ndash;15</span>
+        </div>
+
+        <p style="margin: 0; font-size: 21px; line-height: 1.35; font-weight: 400; letter-spacing: -0.01em; max-width: 40ch;">A router scores 48 experts and keeps the best four. One shared expert always runs. The other 44 are never touched for that token.</p>
+
+        <div style="display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 6px;">
+          <sc-for list="{{experts}}" as="e" hint-placeholder-count="48">
+            <div style="aspect-ratio: 1; border-radius: 4px; background: {{e.bg}}; border: 1px solid {{e.bd}};"></div>
+          </sc-for>
+        </div>
+
+        <div style="display: flex; gap: 26px; flex-wrap: wrap; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #4b5261;">
+          <span style="display: flex; align-items: center; gap: 8px;"><i style="width: 13px; height: 13px; border-radius: 3px; background: linear-gradient(140deg, {{accent}}, {{indigo}});"></i>4 routed</span>
+          <span style="display: flex; align-items: center; gap: 8px;"><i style="width: 13px; height: 13px; border-radius: 3px; background: #eceef3; border: 1px solid #d6dae4;"></i>44 idle</span>
+          <span style="display: flex; align-items: center; gap: 8px;"><i style="width: 13px; height: 13px; border-radius: 3px; background: {{indigo}};"></i>1 shared, always on</span>
+        </div>
+
+        <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #4b5261; max-width: 56ch;">Sigmoid scoring with bias-based balancing &mdash; overloaded experts get nudged down, idle ones up, outside the loss. Measured across the whole run: load 1.9&ndash;2.4% against 2.1% uniform, <b style="color: #10131c;">zero dead experts</b>.</p>
+      </div>
+
+      <div style="height: 1px; background: #dfe3ea;"></div>
+
+      <!-- MLA -->
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: {{indigo}};">Inside the attention</span>
+
+        <p style="margin: 0; font-size: 21px; line-height: 1.35; letter-spacing: -0.01em; max-width: 40ch;">Keys and values are squeezed through a 256-wide latent, so the cache holds 288 numbers per token instead of 2,048.</p>
+
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+          <div style="border: 2px solid #d6dae4; border-radius: 9px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: #6b7280;">nope &mdash; 64 dims</span>
+            <span style="font-size: 16px; line-height: 1.35;">rides through the latent, carries content</span>
+          </div>
+          <div style="border: 2px solid {{indigo}}; border-radius: 9px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; background: #f4f6fd;">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: {{indigo}};">rope &mdash; 32 dims</span>
+            <span style="font-size: 16px; line-height: 1.35;">bypasses compression, carries position</span>
+          </div>
+        </div>
+
+        <p style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.6; color: #4b5261; max-width: 56ch;">There is no positional encoding at the input. RoPE rotates Q and K <b style="color: #10131c;">inside attention, in every layer</b> &mdash; so what survives the dot product is relative distance, not absolute position.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================ stats band -->
+  <div style="margin-top: 36px; background: #10131c; color: #fbfbfa; padding: 30px 64px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px;">
+    <sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+      <div style="display: flex; flex-direction: column; gap: 6px;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 40px; font-weight: 700; letter-spacing: -0.03em; color: {{s.tint}};">{{s.big}}</span>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.4; color: #98a0b0; white-space: pre-line;">{{s.label}}</span>
+      </div>
+    </sc-for>
+  </div>
+
+  <div style="background: #10131c; color: #6b7280; padding: 0 64px 26px; font-family: 'JetBrains Mono', monospace; font-size: 13px; display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+    <span>github.com/Abhisingh18/Sutra-1.3B-Model</span>
+    <span>huggingface.co/Abhisingh-18/Sutra-1.3B-Chat</span>
+  </div>
+
+</div>
+</x-dc>
+
+<script data-dc-script data-props='{"accent":{"editor":"color","default":"#ff7a1a","options":["#ff7a1a","#e8611a","#c2410c","#d97706"]},"indigo":{"editor":"color","default":"#2549c7","options":["#2549c7","#1a327f","#3730a3","#1d4ed8"]},"$preview":{"width":1123,"height":1587}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#ff7a1a';
+    const indigo = this.props.indigo ?? '#2549c7';
+
+    // Four of forty-eight light up. Which four is arbitrary -- what the figure
+    // has to show is the ratio, so they are spread rather than clustered.
+    const routed = new Set([5, 17, 26, 39]);
+    const experts = [];
+    for (let i = 0; i < 48; i++) {
+      const on = routed.has(i);
+      experts.push({
+        bg: on ? 'linear-gradient(140deg, ' + accent + ', ' + indigo + ')' : '#eceef3',
+        bd: on ? 'transparent' : '#d6dae4'
+      });
+    }
+
+    const stats = [
+      { big: '1.32B', label: 'parameters stored\n48 experts per layer', tint: '#fbfbfa' },
+      { big: '0.28B', label: 'active per token\n4.71x sparse', tint: accent },
+      { big: '18B', label: 'tokens of pretraining\nheld-out perplexity 15.00', tint: '#fbfbfa' },
+      { big: '10/s', label: 'tokens on a CPU core\nno GPU required', tint: indigo }
+    ];
+
+    return { accent, indigo, experts, stats };
+  }
+}
+</script>
+</body>
+</html>

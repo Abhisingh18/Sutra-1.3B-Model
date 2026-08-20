@@ -1,0 +1,6 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1123, "h": 1587, "title": "Sutra-1.3B poster", "print": "fixed" }
+  ],
+  "launch": { "view": "focused", "file": "Main.dc.html" }
+}

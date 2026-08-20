@@ -1,0 +1,13 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html",    "x": 0,    "y": 0, "w": 1080, "h": 1350, "title": "1 · Hook",         "print": "fixed" },
+    { "file": "Stack.dc.html",   "x": 1180, "y": 0, "w": 1080, "h": 1350, "title": "2 · The stack",    "print": "fixed" },
+    { "file": "Experts.dc.html", "x": 2360, "y": 0, "w": 1080, "h": 1350, "title": "3 · The trick",    "print": "fixed" },
+    { "file": "Results.dc.html", "x": 3540, "y": 0, "w": 1080, "h": 1350, "title": "4 · Results",      "print": "fixed" },
+    { "file": "Links.dc.html",   "x": 4720, "y": 0, "w": 1080, "h": 1350, "title": "5 · Links",        "print": "fixed" }
+  ],
+  "annotations": [
+    { "id": "export-note", "x": 0, "y": -190, "w": 720, "text": "LinkedIn carousel — 1080×1350 (4:5).\nExport PDF from the toolbar to get all five as one document, then post it on LinkedIn as a document post." }
+  ],
+  "launch": { "view": "canvas" }
+}

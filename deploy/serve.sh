@@ -18,11 +18,23 @@ CLOUDFLARED="${CLOUDFLARED:-$ROOT/deploy/cloudflared}"
 PORT="${PORT:-8000}"
 LOG="$ROOT/logs_serve.txt"
 
-# GPUs 7-10 are the ones this project is allowed to touch, and PCI_BUS_ID is
-# required or the indices do not mean what nvidia-smi says they mean.
+# PCI_BUS_ID is required or the indices do not mean what nvidia-smi says they
+# mean. The card is a default, not a fixture: 8 filled up with someone else's
+# 46 GB job and every restart then died on OOM, so override it when the box is
+# busy rather than letting the supervisor loop.
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
-export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-8}"
+export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-2}"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+
+# Search key, kept outside the repo. Its absence is not an error -- the server
+# simply starts without the web toggle, and /health reports web:false so the
+# frontend hides the control rather than offering one that does nothing.
+TAVILY_KEY_FILE="${TAVILY_KEY_FILE:-$HOME/.sutra_tavily_key}"
+WEB_FLAG=""
+if [ -s "$TAVILY_KEY_FILE" ]; then
+  export TAVILY_API_KEY="$(tr -d '\n' <"$TAVILY_KEY_FILE")"
+  WEB_FLAG="--web"
+fi
 
 say() { echo "[$(date '+%F %T')] $*" | tee -a "$LOG"; }
 
@@ -38,7 +50,7 @@ start_server() {
   sleep 2
 
   say "starting model server on :$PORT"
-  "$PY" -m deploy.server --port "$PORT" >>"$ROOT/logs_server.txt" 2>&1 &
+  "$PY" -m deploy.server --port "$PORT" $WEB_FLAG >>"$ROOT/logs_server.txt" 2>&1 &
   SERVER_PID=$!
   # Loading 5.3 GB of weights takes the better part of a minute. Health checks
   # must not run before then, or every start is killed mid-load and the

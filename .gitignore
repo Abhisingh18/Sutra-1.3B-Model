@@ -38,3 +38,6 @@ logs_*.txt
 
 # Server-side token used by deploy/publish_url.sh; never in the repo
 .sutra_gh_token
+
+# Search API key read by deploy/serve.sh; never in the repo
+.sutra_tavily_key

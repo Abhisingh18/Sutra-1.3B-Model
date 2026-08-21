@@ -44,6 +44,31 @@ def _words(text):
             if len(w) > 2 and w not in _STOP}
 
 
+# What the question asks for, and the shape of a sentence that supplies it.
+# Embedding similarity alone gets this wrong in a specific, repeatable way:
+# asked for the self-attention formula it ranked "In simple words, Self
+# Attention = Self + Attention" above
+# "Attention(Q, K, V) = softmax((Q . K^T) / sqrt(d_k)) . V", because MiniLM
+# reads prose far better than it reads symbols. If someone asks for a formula,
+# a sentence carrying an actual expression is the better answer whatever the
+# cosine says.
+_INTENT = [
+    (("formula", "equation", "expression"),
+     re.compile(r"[=∑√]\s*\S|\bsoftmax\b|\bsqrt\b")),
+    (("when", "year", "date", "born", "founded"), re.compile(r"\b(1[0-9]{3}|20[0-9]{2})\b")),
+    (("many", "much", "count", "number", "percent", "cost", "price"), re.compile(r"\d")),
+]
+
+
+def _intent_bonus(query, sentence):
+    q = query.lower()
+    bonus = 0.0
+    for words, pattern in _INTENT:
+        if any(w in q for w in words) and pattern.search(sentence):
+            bonus += 0.2
+    return bonus
+
+
 def best_quote(query, hits, encoder=None):
     """The sentence most likely to answer `query`, or None.
 
@@ -66,8 +91,15 @@ def best_quote(query, hits, encoder=None):
             embeds = encoder.encode(sentences + [query], convert_to_numpy=True,
                                     normalize_embeddings=True)
             sims = embeds[:-1] @ embeds[-1]
-            idx = int(np.argmax(sims))
-            if float(sims[idx]) < 0.35:
+            # Cosine ranks prose above symbols, so it cannot be the only vote.
+            # The intent bonus is what puts the equation ahead of the sentence
+            # that merely talks about the equation.
+            ranked = [(float(sims[i]) + _intent_bonus(query, sentences[i]), i)
+                      for i in range(len(sentences))]
+            best, idx = max(ranked)
+            # Floor applies to the cosine, not the bonus -- a bonus must not
+            # promote a sentence that was never relevant.
+            if float(sims[idx]) < 0.3:
                 return None
             return {"text": candidates[idx][0], "source": candidates[idx][1],
                     "score": round(float(sims[idx]), 2)}
@@ -80,8 +112,8 @@ def best_quote(query, hits, encoder=None):
     scored = []
     for s, source in candidates:
         overlap = len(q_words & _words(s)) / len(q_words)
-        scored.append((overlap, s, source))
-    overlap, s, source = max(scored)
+        scored.append((overlap + _intent_bonus(query, s), overlap, s, source))
+    _rank, overlap, s, source = max(scored)
     # Below this the "answer" is a sentence that happens to share a word, which
     # is worse than showing nothing and letting the reply stand alone.
     if overlap < 0.4:

@@ -1,6 +1,6 @@
 """Pretraining loop.
 
-    torchrun --standalone --nproc_per_node=3 -m src.train
+    torchrun --standalone --nproc_per_node=4 -m src.train
 
 Designed around one assumption: this run will be interrupted. Power cuts, driver
 resets, someone else claiming a GPU, an OOM at step 30,000. So every restart is
@@ -38,13 +38,18 @@ from .data.dataloader import TokenDataset
 # emptied: 1-4 once held someone else's job and were off limits, and 7-10 were
 # free. That reversed -- 7-10 are now busy and 1-4 are not.
 #
-# GPU 0 is off limits by instruction. GPU 2 runs the inference server behind the
-# website, so a training run there would OOM the thing people are using. GPU 5
-# is a smaller card and not part of this pool.
+# GPU 0 is off limits by instruction. GPU 5 is a smaller card and not part of
+# this pool.
+#
+# GPU 2 is in the pool but shares with the inference server behind the website,
+# which holds about 8 GB. Training took 28.5 GB a card last run, so the two fit
+# in 49 GB with roughly 12 GB spare -- enough, but not enough to ignore. If a
+# run OOMs there, drop micro_batch_size before dropping the card, and check the
+# site is still answering afterwards.
 #
 # This is enforced rather than documented, because "remember to set the env var"
 # fails exactly once and the cost of that failure lands on someone else.
-ALLOWED_GPUS = {"1", "3", "4"}
+ALLOWED_GPUS = {"1", "2", "3", "4"}
 
 
 # ---------------------------------------------------------------------------
@@ -117,18 +122,18 @@ def enforce_gpu_allowlist():
         raise SystemExit(
             "CUDA_DEVICE_ORDER must be set to PCI_BUS_ID, or device indices do "
             "not mean what nvidia-smi says they mean.\nLaunch with:\n"
-            "  CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=1,3,4 \\\n"
-            "  torchrun --standalone --nproc_per_node=3 -m src.train"
+            "  CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=1,2,3,4 \\\n"
+            "  torchrun --standalone --nproc_per_node=4 -m src.train"
         )
 
     visible = os.environ.get("CUDA_VISIBLE_DEVICES")
     if visible is None:
         raise SystemExit(
             "CUDA_VISIBLE_DEVICES is not set.\n"
-            "GPU 0 is off limits and GPU 2 serves the website.\n"
+            "GPU 0 is off limits; GPU 2 is shared with the website server.\n"
             "Launch with:\n"
-            "  CUDA_VISIBLE_DEVICES=1,3,4 torchrun --standalone "
-            "--nproc_per_node=3 -m src.train"
+            "  CUDA_VISIBLE_DEVICES=1,2,3,4 torchrun --standalone "
+            "--nproc_per_node=4 -m src.train"
         )
     requested = {d.strip() for d in visible.split(",") if d.strip()}
     forbidden = requested - ALLOWED_GPUS

@@ -89,7 +89,8 @@ print(generate(model, mcfg, tok, device, "What is machine learning?"))
     ├── sft_epoch_0.pt
     ├── sft_epoch_1.pt
     ├── sft_epoch_2.pt
-    └── dpo_epoch_0.pt
+    ├── dpo_epoch_0.pt
+    └── dpo_epoch_0.int8.pt   quantized — 1.42 GB
 ```
 
 The root holds what you need to run the model. `checkpoints/` is the archive of
@@ -103,6 +104,7 @@ on faith.
 | `sft_epoch_1.pt` | SFT, 2 epochs | Comparison |
 | `sft_epoch_2.pt` | SFT, 3 epochs | Best held-out loss of the three (1.7033) — no overfitting |
 | `dpo_epoch_0.pt` | DPO on top of SFT | Same weights as `model.safetensors` |
+| `dpo_epoch_0.int8.pt` | INT8 quantized DPO | Half the memory at no measurable cost — see below |
 
 Optimizer state is stripped from all of them, so each is 5.3 GB rather than
 15.8 GB. They are for inference, not for resuming training.
@@ -160,6 +162,34 @@ cannot buy: the pronoun-resolution reasoning that task measures never appeared.
 DPO's held-out preference accuracy came out at **47.5%** against a 50% baseline,
 so the alignment stage did not generalise — the 66% reported during training was
 measured on training batches. The SFT and DPO checkpoints perform about equally.
+
+## INT8 quantized weights
+
+`checkpoints/dpo_epoch_0.int8.pt` is the same model at **1.42 GB instead of
+2.64 GB** (1.62 GB resident on GPU). Measured on all four tasks, 500 examples
+each:
+
+| Task | bf16 | INT8 | Δ |
+|---|---|---|---|
+| HellaSwag | 40.4 | 40.2 | −0.2 |
+| ARC-easy | 45.0 | 45.0 | 0.0 |
+| PIQA | 65.6 | 65.2 | −0.4 |
+| WinoGrande | 49.0 | 48.8 | −0.2 |
+
+At 500 examples, 0.2 points is a single example — the difference is noise.
+
+Weight-only, symmetric, per-output-channel: each row of each weight matrix
+carries its own scale, because rows differ in range by orders of magnitude.
+Activations stay bf16, and `lm_head` is left unquantized. **This saves memory,
+not time** — the weight is dequantized before the matmul, so arithmetic runs
+at the same speed.
+
+```bash
+SUTRA_CKPT=checkpoints/dpo_epoch_0.int8.pt python inference.py "Explain gravity."
+```
+
+Not to be confused with DeepSeek's FP8 work, which is a *training* technique.
+This is post-training quantization, applied to finished weights.
 
 ## Limitations
 

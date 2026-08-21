@@ -54,7 +54,8 @@ export default function Home() {
   // retrieved passage is not a guarantee either, but it puts the real text on
   // screen under the reply, which nothing else here does.
   const [canWeb, setCanWeb] = useState(false);
-  const [web, setWeb] = useState(true);
+  // Off by default: the user turns search on for the questions that need it.
+  const [web, setWeb] = useState(false);
   const [doc, setDoc] = useState<{ id: string; name: string; chunks: number } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [navOpen, setNavOpen] = useState(false);

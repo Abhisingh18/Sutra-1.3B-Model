@@ -27,6 +27,13 @@ _STOP = {
     "the", "a", "an", "of", "in", "on", "at", "to", "for", "from", "by", "with",
     "and", "or", "that", "this", "it", "its", "as", "do", "does", "did",
     "tell", "explain", "give", "show", "me", "my", "you", "your",
+    # Hinglish. Queries arrive as "architecture ko samjhao" or "ye kya hai",
+    # and without these the instruction words count as topic -- which is how a
+    # one-word question passed the two-word test below.
+    "samjhao", "samjha", "batao", "bata", "karo", "kaise", "kaisa", "kya",
+    "kaun", "kon", "kab", "kahan", "kyu", "kyun", "hai", "hia", "hota",
+    "mein", "mei", "aur", "wala", "wale", "sab", "ish", "iska", "ishka",
+    "mujhe", "humko", "dedo", "dena", "chahiye", "chiaye",
 }
 
 
@@ -46,6 +53,17 @@ def _clean(text):
     return text
 
 
+def _complete(sentence):
+    """A quotable sentence ends where its author ended it.
+
+    Extracted passages get cut at chunk boundaries, and the fragment reads as
+    the card's own truncation: asked about architecture it quoted "Architectural
+    works, in the material form" and simply stopped. Requiring terminal
+    punctuation drops those instead of presenting half a thought as an answer.
+    """
+    return sentence.rstrip().endswith((".", "!", "?", '."', ".)"))
+
+
 def _sentences(text, min_len=40, max_len=400):
     out = []
     # Split on "[...]" before anything else. It marks text the extractor
@@ -55,7 +73,8 @@ def _sentences(text, min_len=40, max_len=400):
     for segment in _ELIDED.split(_clean(text)):
         for raw in _SPLIT.split(segment):
             s = " ".join(raw.split())
-            if min_len <= len(s) <= max_len and not _LATEX.search(s):
+            if (min_len <= len(s) <= max_len and not _LATEX.search(s)
+                    and _complete(s)):
                 out.append(s)
     return out
 
@@ -116,6 +135,13 @@ def best_quote(query, hits, encoder=None):
     back to word overlap. The fallback matters -- web results arrive with no
     index loaded behind them.
     """
+    # A card asserts that one sentence answers the question. A single-word
+    # topic has no such sentence -- "architecture ko samjhao" wants an
+    # explanation, and the best any one sentence can offer is a definition or,
+    # as happened, an etymology. Those questions belong to the model.
+    if len(_words(query)) < 2:
+        return None
+
     candidates = []
     for _score, text, source in hits:
         for s in _sentences(text):

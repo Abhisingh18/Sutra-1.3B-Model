@@ -6,6 +6,7 @@ principles in PyTorch. No HuggingFace `Trainer`, no pretrained weights.
 Target hardware: 4x RTX 6000 Ada (48GB), PCIe, no NVLink.
 
 **Weights:** [huggingface.co/Abhisingh-18/Sutra-1.3B-Chat](https://huggingface.co/Abhisingh-18/Sutra-1.3B-Chat)
+**Data recipe:** [huggingface.co/datasets/Abhisingh-18/Sutra-1.3B-Data](https://huggingface.co/datasets/Abhisingh-18/Sutra-1.3B-Data) — every source, config, split and share
 
 ```bash
 pip install torch tokenizers huggingface_hub

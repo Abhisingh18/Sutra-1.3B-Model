@@ -2878,3 +2878,41 @@ td.win {
   font-variant-numeric: tabular-nums;
   color: var(--ink);
 }
+
+/* The answering sentence, copied out of the source word for word. It sits
+   above the reply because on lookup questions it IS the answer -- the model
+   below is commentary, and often wrong commentary. */
+.quotecard {
+  margin-bottom: 12px;
+  padding: 14px 18px;
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-left: 3px solid var(--accent);
+  border-radius: 12px;
+}
+
+.quotelabel {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.quotecard p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--fg);
+  /* Formulas and code arrive inside these sentences and must not reflow. */
+  overflow-wrap: break-word;
+}
+
+.quotesrc {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--fg-faint);
+}

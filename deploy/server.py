@@ -118,6 +118,21 @@ def generate_tokens(req: ChatRequest):
     # for a 60-day notice period it answered "6 days". Showing the source text
     # is what makes that failure visible and the answer checkable, instead of
     # quietly wrong.
+    #
+    # Better than making that visible is not needing it. When one sentence in
+    # the retrieved text answers the question outright -- a formula, a date, a
+    # definition -- copy it out verbatim and lead with it. Asked for the
+    # self-attention formula the model was handed
+    # "Attention(Q, K, V) = softmax((Q . K^T) / sqrt(d_k)) . V" and wrote
+    # "Attention (Q, K) = C_K W - C_V T". Python copies it exactly; the model
+    # cannot, and no prompt changes that.
+    if used:
+        from src.rag.quote import best_quote
+        enc = STATE["retriever"].enc if STATE.get("retriever") is not None else None
+        quote = best_quote(req.message, used, encoder=enc)
+        if quote:
+            yield {"quote": quote}
+
     yield {"sources": [{"score": round(sc, 2), "text": t[:600], "name": n}
                        for sc, t, n in used[:3]]}
 

@@ -126,6 +126,11 @@ SUTRA_CKPT=checkpoints/base_pretrained.pt python inference.py "The capital of Fr
 
 Pretraining held-out perplexity **15.00**; SFT held-out perplexity **5.49**.
 
+Every dataset behind all three stages — with its exact config, split, text field
+and token share, plus the prep script — is published as
+**[Sutra-1.3B-Data](https://huggingface.co/datasets/Abhisingh-18/Sutra-1.3B-Data)**,
+so the corpus can be rebuilt from the original sources.
+
 ## Evaluation
 
 Log-likelihood scoring, 500 examples per task, length-normalised accuracy.

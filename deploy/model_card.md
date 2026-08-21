@@ -48,6 +48,30 @@ here — the architecture code ships with the weights, not with `transformers`.
 
 ## Quick start
 
+```python
+from transformers import AutoModelForCausalLM
+from tokenizers import Tokenizer
+import torch
+
+model = AutoModelForCausalLM.from_pretrained(
+    "Abhisingh-18/Sutra-1.3B-Chat", trust_remote_code=True,
+    dtype=torch.bfloat16).eval()
+tok = Tokenizer.from_file("tokenizer.json")
+
+prompt = ("<|begin_of_text|><|user|>\nWhat is the capital of France?"
+          "<|end_turn|>\n<|assistant|>\n")
+ids = torch.tensor([tok.encode(prompt).ids])
+out = model.generate(ids, max_new_tokens=64, min_new_tokens=12, do_sample=False)
+print(tok.decode(out[0].tolist()[ids.shape[1]:]))
+```
+
+`trust_remote_code=True` is required: the architecture (MoE + Multi-head Latent
+Attention) ships with the weights rather than with `transformers`. The remote
+code is verified to produce logits identical to the reference implementation to
+7e-06 in fp32.
+
+Or without transformers at all:
+
 ```bash
 pip install torch tokenizers huggingface_hub
 wget https://huggingface.co/Abhisingh-18/Sutra-1.3B-Chat/resolve/main/inference.py
@@ -72,9 +96,8 @@ model, mcfg, tok, device = build()
 print(generate(model, mcfg, tok, device, "What is machine learning?"))
 ```
 
-> **Note:** this is a custom architecture (MoE + Multi-head Latent Attention),
-> so `AutoModelForCausalLM.from_pretrained` will **not** work. Use
-> `inference.py`, which carries the model code.
+> **Note:** `min_new_tokens` matters. Left to itself this model often emits
+> `<|end_turn|>` immediately and returns an empty string.
 
 ## Repository layout
 

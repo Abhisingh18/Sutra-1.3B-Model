@@ -2916,3 +2916,49 @@ td.win {
   font-size: 12px;
   color: var(--fg-faint);
 }
+
+/* What happened when the model's code was actually run. Green only when it
+   ran -- the point of this card is that "looks like Python" and "works" are
+   different claims, and only one of them can be checked. */
+.checkcard {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg-soft);
+}
+
+.checkcard.ok {
+  border-color: color-mix(in srgb, #15803d 35%, transparent);
+  background: color-mix(in srgb, #15803d 7%, transparent);
+}
+
+.checkcard.failed,
+.checkcard.timeout {
+  border-color: color-mix(in srgb, #b91c1c 35%, transparent);
+  background: color-mix(in srgb, #b91c1c 7%, transparent);
+}
+
+.checklabel {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-soft);
+}
+
+.checkcard.ok .checklabel { color: #15803d; }
+.checkcard.failed .checklabel,
+.checkcard.timeout .checklabel { color: #b91c1c; }
+
+.checkcard pre {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--fg);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}

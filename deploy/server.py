@@ -191,6 +191,15 @@ def generate_tokens(req: ChatRequest):
                 yield text[sent:]
                 sent = len(text)
 
+        # Whatever code came out, run it. Asked to reverse a string this model
+        # answered "def reverse_string(s): return s" and then several lines
+        # that do not parse -- prose that looks like code. Nothing in the reply
+        # says so, and no amount of reading it aloud will. Executing it does.
+        from src.rag.code import check
+        verdict = check(tok.decode(produced))
+        if verdict:
+            yield {"code": verdict}
+
 
 @app.post("/chat")
 async def chat(req: ChatRequest):

@@ -84,10 +84,13 @@ def _words(text):
             if len(w) > 2 and w not in _STOP}
 
 
-# Sentences that are mostly LaTeX markup. Wikipedia stores equations as
-# "{\\displaystyle E_{\\text{k}}={\\tfrac {1}{2}}mv^{2}}", which is correct and
-# completely unreadable on screen. Better to quote nothing than to quote that.
-_LATEX = re.compile(r"\\displaystyle|\\tfrac|\\begin\{")
+# Sentences carrying LaTeX markup. Wikipedia and teaching sites store
+# equations as "{\\displaystyle E_{\\text{k}}={\\tfrac {1}{2}}mv^{2}}" -- correct,
+# and unreadable on screen. Naming the commands one at a time did not hold:
+# \\displaystyle and \\tfrac were filtered, then \\text{ came through in a
+# different result. Any backslash-command is the general signal, so match that
+# instead of maintaining a list that is always one case behind.
+_LATEX = re.compile(r"\\[a-zA-Z]+\s*\{|\\(?:displaystyle|tfrac|frac|begin|left|right)\b")
 
 # Characters that appear in written mathematics but not in an English sentence.
 _MATHY = re.compile(r"[()\[\]/^_|∑√·×÷≈≤≥]|\d")

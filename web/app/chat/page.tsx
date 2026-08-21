@@ -12,12 +12,19 @@ const STORE_BASE = "sutra.chats.v1";
 type Src = { score: number; text: string; name: string };
 type Tool = { tool: string; expression: string; answer: string };
 type Quote = { text: string; source: string; score: number };
+type CodeCheck = {
+  status: "ok" | "failed" | "timeout" | "refused" | "error";
+  output?: string;
+  detail?: string;
+  code: string;
+};
 type Msg = {
   role: "user" | "assistant";
   text: string;
   sources?: Src[];
   tool?: Tool;
   quote?: Quote;
+  check?: CodeCheck;
 };
 type Chat = { id: string; title: string; at: number; msgs: Msg[] };
 
@@ -210,6 +217,12 @@ export default function Home() {
               const cc = [...m];
               cc[cc.length - 1] = { ...cc[cc.length - 1], tool: d.tool };
               return cc;
+            }, id);
+          if (d.code)
+            patchActive((m) => {
+              const c = [...m];
+              c[c.length - 1] = { ...c[c.length - 1], check: d.code };
+              return c;
             }, id);
           if (d.quote)
             patchActive((m) => {
@@ -407,6 +420,24 @@ export default function Home() {
                       {i === msgs.length - 1 && (
                         <button onClick={regenerate}>Regenerate</button>
                       )}
+                    </div>
+                  )}
+                  {m.check && (
+                    <div className={`checkcard ${m.check.status}`}>
+                      <span className="checklabel">
+                        {m.check.status === "ok"
+                          ? "Ran successfully"
+                          : m.check.status === "failed"
+                          ? "This code does not run"
+                          : m.check.status === "timeout"
+                          ? "This code does not finish"
+                          : "Not run"}
+                      </span>
+                      <pre>
+                        {m.check.status === "ok"
+                          ? m.check.output
+                          : m.check.detail}
+                      </pre>
                     </div>
                   )}
                   {m.sources?.length ? (

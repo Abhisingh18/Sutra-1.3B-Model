@@ -30,12 +30,33 @@ _STOP = {
 }
 
 
+# Search results arrive as extracted markdown, and it shows: heading markers,
+# empty table rows, backslash-escaped underscores ("d\\_k" for "d_k"), and
+# "[...]" where the extractor dropped text. Left in, all of it gets quoted
+# verbatim -- which is the one thing this card promises not to garble.
+_ELIDED = re.compile(r"\[\.\.\.\]")
+_MD_NOISE = re.compile(r"^#+\s*|\|[\s|]*\||\\\"\)")
+_MD_ESCAPE = re.compile(r"\\([_*\[\]()#.|+-])")
+
+
+def _clean(text):
+    text = text.replace("\n", " ")
+    text = _MD_NOISE.sub(" ", text)
+    text = _MD_ESCAPE.sub(r"\1", text)
+    return text
+
+
 def _sentences(text, min_len=40, max_len=400):
     out = []
-    for raw in _SPLIT.split(text.replace("\n", " ")):
-        s = " ".join(raw.split())
-        if min_len <= len(s) <= max_len:
-            out.append(s)
+    # Split on "[...]" before anything else. It marks text the extractor
+    # dropped, so what sits either side of it is unrelated -- and since no
+    # sentence-ending punctuation separates them, they otherwise fuse into a
+    # single "sentence" and the card quotes two halves of different thoughts.
+    for segment in _ELIDED.split(_clean(text)):
+        for raw in _SPLIT.split(segment):
+            s = " ".join(raw.split())
+            if min_len <= len(s) <= max_len and not _LATEX.search(s):
+                out.append(s)
     return out
 
 
@@ -44,28 +65,47 @@ def _words(text):
             if len(w) > 2 and w not in _STOP}
 
 
+# Sentences that are mostly LaTeX markup. Wikipedia stores equations as
+# "{\\displaystyle E_{\\text{k}}={\\tfrac {1}{2}}mv^{2}}", which is correct and
+# completely unreadable on screen. Better to quote nothing than to quote that.
+_LATEX = re.compile(r"\\displaystyle|\\tfrac|\\begin\{")
+
+# Characters that appear in written mathematics but not in an English sentence.
+_MATHY = re.compile(r"[()\[\]/^_|∑√·×÷≈≤≥]|\d")
+
+
+def _is_formula(sentence):
+    """Does this sentence carry an expression, rather than talk about one?
+
+    An equals sign alone does not decide it: "In simple words, Self Attention =
+    Self + Attention" has one, and ranking it as a formula is exactly the
+    mistake that hid the real answer. What separates them is that either side
+    of a real formula is symbols, not words -- so require the structural
+    characters too.
+    """
+    return "=" in sentence and len(_MATHY.findall(sentence)) >= 4
+
+
 # What the question asks for, and the shape of a sentence that supplies it.
 # Embedding similarity alone gets this wrong in a specific, repeatable way:
-# asked for the self-attention formula it ranked "In simple words, Self
-# Attention = Self + Attention" above
-# "Attention(Q, K, V) = softmax((Q . K^T) / sqrt(d_k)) . V", because MiniLM
-# reads prose far better than it reads symbols. If someone asks for a formula,
-# a sentence carrying an actual expression is the better answer whatever the
-# cosine says.
+# asked for the self-attention formula it ranked the plain-words restatement
+# above "Attention(Q, K, V) = softmax((Q . K^T) / sqrt(d_k)) . V", because
+# MiniLM reads prose far better than it reads symbols.
 _INTENT = [
-    (("formula", "equation", "expression"),
-     re.compile(r"[=∑√]\s*\S|\bsoftmax\b|\bsqrt\b")),
-    (("when", "year", "date", "born", "founded"), re.compile(r"\b(1[0-9]{3}|20[0-9]{2})\b")),
-    (("many", "much", "count", "number", "percent", "cost", "price"), re.compile(r"\d")),
+    (("formula", "equation", "expression"), _is_formula),
+    (("when", "year", "date", "born", "founded"),
+     lambda s: re.search(r"\b(1[0-9]{3}|20[0-9]{2})\b", s) is not None),
+    (("many", "much", "count", "number", "percent", "cost", "price"),
+     lambda s: re.search(r"\d", s) is not None),
 ]
 
 
 def _intent_bonus(query, sentence):
     q = query.lower()
     bonus = 0.0
-    for words, pattern in _INTENT:
-        if any(w in q for w in words) and pattern.search(sentence):
-            bonus += 0.2
+    for words, matches in _INTENT:
+        if any(w in q for w in words) and matches(sentence):
+            bonus += 0.35
     return bonus
 
 

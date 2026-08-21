@@ -10,7 +10,13 @@ import { backendUrl, forgetBackend } from "../backend";
 const STORE_BASE = "sutra.chats.v1";
 
 type Src = { score: number; text: string; name: string };
-type Msg = { role: "user" | "assistant"; text: string; sources?: Src[] };
+type Tool = { tool: string; expression: string; answer: string };
+type Msg = {
+  role: "user" | "assistant";
+  text: string;
+  sources?: Src[];
+  tool?: Tool;
+};
 type Chat = { id: string; title: string; at: number; msgs: Msg[] };
 
 // Chosen by testing, not by guessing. Every candidate was run through the
@@ -196,6 +202,12 @@ export default function Home() {
         for (const f of frames) {
           if (!f.startsWith("data: ")) continue;
           const d = JSON.parse(f.slice(6));
+          if (d.tool)
+            patchActive((m) => {
+              const cc = [...m];
+              cc[cc.length - 1] = { ...cc[cc.length - 1], tool: d.tool };
+              return cc;
+            }, id);
           if (d.sources?.length)
             patchActive((m) => {
               const c = [...m];
@@ -349,6 +361,13 @@ export default function Home() {
               {msgs.map((m, i) => (
                 <div key={i} className={`turn ${m.role}`}>
                   <div className="who">{m.role === "user" ? "You" : "Sutra"}</div>
+                  {m.tool && (
+                    <div className="toolcard">
+                      <span className="toollabel">Calculated</span>
+                      <span className="toolsum">{m.tool.expression}</span>
+                      <span className="toolans">{m.tool.answer}</span>
+                    </div>
+                  )}
                   <div className="body">
                     {m.text ? (
                       m.role === "assistant" ? (

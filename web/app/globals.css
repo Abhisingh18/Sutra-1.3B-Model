@@ -2838,3 +2838,43 @@ td.win {
 .tools:empty {
   display: none;
 }
+
+/* ---- computed answers --------------------------------------------------- */
+
+/* Sits ABOVE the reply, because it is the answer -- the model's text below it
+   is commentary. This one number is the only thing on screen that is computed
+   rather than generated, and it is styled to say so. */
+.toolcard {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-bottom: 12px;
+  padding: 14px 18px;
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  border-radius: 12px;
+}
+
+.toollabel {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.toolsum {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  color: var(--fg-soft);
+}
+
+.toolans {
+  margin-left: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}

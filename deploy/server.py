@@ -86,6 +86,14 @@ def generate_tokens(req: ChatRequest):
     end_id = tok.token_to_id(END_TURN)
 
     from src.rag.retrieve import build_prompt
+    from src.rag.tools import solve
+
+    # Run the tool first and send its result ahead of any tokens. It is a
+    # computed fact, not something for the model to paraphrase -- shown a
+    # number, this model reliably restates it wrong.
+    tool = solve(req.message)
+    if tool:
+        yield {"tool": tool}
 
     question, used = req.message, []
     if req.doc_id and STATE.get("docstore") is not None:

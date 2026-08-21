@@ -36,6 +36,16 @@ the point: [github.com/Abhisingh18/Sutra-1.3B-Model](https://github.com/Abhising
 carries the tokenizer, data prep, pretraining, SFT, DPO, evaluation and serving
 — plus the six silent bugs that cost the most time, written up in full.
 
+## Try it without installing anything
+
+**[sutra-1-3-b-model-15co.vercel.app](https://sutra-1-3-b-model-15co.vercel.app)** — a live chat demo running these
+weights, with web search and document upload on top.
+
+The inference widget on this page stays empty on purpose: Inference Providers
+serve standard `transformers` architectures, and this is a custom MoE with
+Multi-head Latent Attention. Same reason `AutoModelForCausalLM` does not work
+here — the architecture code ships with the weights, not with `transformers`.
+
 ## Quick start
 
 ```bash

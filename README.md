@@ -5,6 +5,7 @@ principles in PyTorch. No HuggingFace `Trainer`, no pretrained weights.
 
 Target hardware: 4x RTX 6000 Ada (48GB), PCIe, no NVLink.
 
+**Live demo:** [sutra-1-3-b-model-15co.vercel.app](https://sutra-1-3-b-model-15co.vercel.app)
 **Weights:** [huggingface.co/Abhisingh-18/Sutra-1.3B-Chat](https://huggingface.co/Abhisingh-18/Sutra-1.3B-Chat)
 **Data recipe:** [huggingface.co/datasets/Abhisingh-18/Sutra-1.3B-Data](https://huggingface.co/datasets/Abhisingh-18/Sutra-1.3B-Data) — every source, config, split and share
 

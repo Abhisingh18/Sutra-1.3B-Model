@@ -405,6 +405,33 @@ export default function Home() {
               send(input);
             }}
           >
+            {canUpload && (
+              <label
+                className={`attach ${uploading ? "busy" : ""}`}
+                title="Attach a document and ask about it"
+              >
+                <input
+                  type="file"
+                  accept=".txt,.md,.pdf"
+                  hidden
+                  disabled={uploading}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) upload(f);
+                    e.target.value = "";
+                  }}
+                />
+                {uploading ? (
+                  <span className="spin dark" />
+                ) : (
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none"
+                       stroke="currentColor" strokeWidth="2"
+                       strokeLinecap="round" aria-hidden="true">
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                )}
+              </label>
+            )}
             <textarea
               ref={taRef}
               value={input}
@@ -427,22 +454,6 @@ export default function Home() {
           </form>
 
           <div className="tools">
-            {canUpload && (
-              <label className="tool">
-                <input
-                  type="file"
-                  accept=".txt,.md,.pdf"
-                  hidden
-                  disabled={uploading}
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) upload(f);
-                    e.target.value = "";
-                  }}
-                />
-                {uploading ? "Indexing…" : "＋ Upload a document"}
-              </label>
-            )}
             {canWeb && !doc && (
               <button
                 className={`tool ${web ? "on" : ""}`}

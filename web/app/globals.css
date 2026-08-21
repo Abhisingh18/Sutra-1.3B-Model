@@ -543,7 +543,7 @@ h1,
   gap: 8px;
   max-width: 740px;
   margin: 0 auto;
-  padding: 8px 8px 8px 16px;
+  padding: 8px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 20px;
@@ -2792,4 +2792,49 @@ td.win {
   background: var(--accent-soft);
   border-color: var(--accent);
   color: var(--accent);
+}
+
+/* ---- attach, inside the composer ---------------------------------------- */
+
+/* Sits to the left of the input rather than in the row underneath. Attaching a
+   file is something you do WHILE composing, so it belongs in the same control,
+   next to send. */
+.attach {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.attach:hover {
+  background: var(--raised);
+  color: var(--accent);
+}
+
+.attach:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.attach.busy {
+  cursor: default;
+  color: var(--accent);
+}
+
+/* The send button's spinner is white on the accent fill; this one turns on a
+   pale ground and needs the accent instead. */
+.spin.dark {
+  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+  border-top-color: var(--accent);
+}
+
+/* With the attach control gone from it, the row below holds at most the web
+   toggle and the document chip. */
+.tools:empty {
+  display: none;
 }

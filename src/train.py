@@ -1,6 +1,6 @@
 """Pretraining loop.
 
-    torchrun --standalone --nproc_per_node=4 -m src.train
+    torchrun --standalone --nproc_per_node=3 -m src.train
 
 Designed around one assumption: this run will be interrupted. Power cuts, driver
 resets, someone else claiming a GPU, an OOM at step 30,000. So every restart is
@@ -34,17 +34,17 @@ from .data.dataloader import TokenDataset
 # distributed setup
 # ---------------------------------------------------------------------------
 
-# GPUs 1-4 on this machine are running another person's job. Touching them
-# would OOM their run and destroy their work. GPU 0 and GPU 5 are also off
-# limits. This project may use ONLY GPUs 6,7,8,9,10.
+# Which cards this project may touch. The set has changed as the box filled and
+# emptied: 1-4 once held someone else's job and were off limits, and 7-10 were
+# free. That reversed -- 7-10 are now busy and 1-4 are not.
 #
-# This is enforced rather than documented, because "remember to set the env
-# var" fails exactly once and the cost of that failure lands on someone else.
-# GPU 10 is unusable: every CUDA allocation on it fails with "CUDA-capable
-# device(s) is/are busy or unavailable", even though nvidia-smi reports it idle
-# with no compute processes. Something outside this namespace is holding it.
-# GPU 6 takes its place to keep the count at four.
-ALLOWED_GPUS = {"7", "8", "9", "10"}
+# GPU 0 is off limits by instruction. GPU 2 runs the inference server behind the
+# website, so a training run there would OOM the thing people are using. GPU 5
+# is a smaller card and not part of this pool.
+#
+# This is enforced rather than documented, because "remember to set the env var"
+# fails exactly once and the cost of that failure lands on someone else.
+ALLOWED_GPUS = {"1", "3", "4"}
 
 
 # ---------------------------------------------------------------------------
@@ -117,18 +117,18 @@ def enforce_gpu_allowlist():
         raise SystemExit(
             "CUDA_DEVICE_ORDER must be set to PCI_BUS_ID, or device indices do "
             "not mean what nvidia-smi says they mean.\nLaunch with:\n"
-            "  CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=7,8,9,10 \\\n"
-            "  torchrun --standalone --nproc_per_node=4 -m src.train"
+            "  CUDA_DEVICE_ORDER=PCI_BUS_ID CUDA_VISIBLE_DEVICES=1,3,4 \\\n"
+            "  torchrun --standalone --nproc_per_node=3 -m src.train"
         )
 
     visible = os.environ.get("CUDA_VISIBLE_DEVICES")
     if visible is None:
         raise SystemExit(
             "CUDA_VISIBLE_DEVICES is not set.\n"
-            "GPUs 1-4 are running someone else's job and must not be touched.\n"
+            "GPU 0 is off limits and GPU 2 serves the website.\n"
             "Launch with:\n"
-            "  CUDA_VISIBLE_DEVICES=6,7,8,9,10 torchrun --standalone "
-            "--nproc_per_node=5 -m src.train"
+            "  CUDA_VISIBLE_DEVICES=1,3,4 torchrun --standalone "
+            "--nproc_per_node=3 -m src.train"
         )
     requested = {d.strip() for d in visible.split(",") if d.strip()}
     forbidden = requested - ALLOWED_GPUS

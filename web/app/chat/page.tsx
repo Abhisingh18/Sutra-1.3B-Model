@@ -40,10 +40,13 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
   const [online, setOnline] = useState<boolean | null>(null);
   const [canUpload, setCanUpload] = useState(false);
-  // Off by default. Search costs a call per message, and most of what this
-  // model is good at -- writing, rewriting, formatting -- needs no lookup.
+  // On by default. Asked a factual question without it, this model answers
+  // confidently from weights that do not contain the answer -- "the Prime
+  // Minister of India" came back as a British citizen who died in 2018. A
+  // retrieved passage is not a guarantee either, but it puts the real text on
+  // screen under the reply, which nothing else here does.
   const [canWeb, setCanWeb] = useState(false);
-  const [web, setWeb] = useState(false);
+  const [web, setWeb] = useState(true);
   const [doc, setDoc] = useState<{ id: string; name: string; chunks: number } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [navOpen, setNavOpen] = useState(false);

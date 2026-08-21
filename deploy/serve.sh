@@ -59,10 +59,19 @@ start_server() {
   "$PY" -m deploy.server --port "$PORT" $WEB_FLAG $RAG_FLAG \
     >>"$ROOT/logs_server.txt" 2>&1 &
   SERVER_PID=$!
-  # Loading 5.3 GB of weights takes the better part of a minute. Health checks
-  # must not run before then, or every start is killed mid-load and the
-  # supervisor restarts forever without the server once coming up.
-  READY_AT=$(( $(date +%s) + 90 ))
+  # Startup is not a wall-clock guess. The 90s here was measured when the
+  # server loaded only 5.3 GB of weights; with the Wikipedia index it also
+  # reads a 12 GB embedding matrix and parses a 7.3 GB chunks.json, and a real
+  # start now takes ~350s. The supervisor duly killed every server at 90s,
+  # mid-load, and restarted forever -- the exact loop this grace was added to
+  # prevent, back again because the constant aged out from under it.
+  #
+  # So stop timing it. A server that has never answered /health is treated as
+  # still starting for as long as its process is alive; only a DEAD process or
+  # the ceiling below ends that. A hung loader is the one case a clock still
+  # has to catch, so keep a generous one.
+  SERVER_UP=0
+  GIVE_UP_AT=$(( $(date +%s) + 900 ))
 }
 
 start_tunnel() {
@@ -130,17 +139,28 @@ while true; do
   # A live process is not the same as a working one: the server can hang while
   # still holding its port, and the tunnel can stay up after losing its edge
   # connection. Health is what actually matters.
-  # Still inside the startup grace period; nothing to check yet.
-  if [ "$(date +%s)" -lt "${READY_AT:-0}" ]; then
-    continue
-  fi
-
   if ! curl -fsS -m 10 "http://localhost:$PORT/health" >/dev/null 2>&1; then
-    say "health check failed, restarting model server"
+    # Never answered yet, and its process is still running: it is loading.
+    # Killing it here is what produced the restart loop.
+    if [ "$SERVER_UP" -eq 0 ] \
+       && kill -0 "${SERVER_PID:-0}" 2>/dev/null \
+       && [ "$(date +%s)" -lt "$GIVE_UP_AT" ]; then
+      continue
+    fi
+    if [ "$SERVER_UP" -eq 0 ]; then
+      say "model server never came up, restarting"
+    else
+      say "health check failed, restarting model server"
+    fi
     kill "${SERVER_PID:-0}" 2>/dev/null
     sleep 3
     start_server
     continue
+  fi
+
+  if [ "$SERVER_UP" -eq 0 ]; then
+    SERVER_UP=1
+    say "model server ready"
   fi
 
   # The server can be healthy while the tunnel is not. A quick tunnel

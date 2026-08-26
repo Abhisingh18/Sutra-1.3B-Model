@@ -1,7 +1,7 @@
 # Sutra-1.3B — a 1.32B parameter MoE LLM trained from scratch
 
 Pretraining, chat fine-tuning and preference alignment, written from first
-principles in PyTorch. No HuggingFace `Trainer`, no pretrained weights.
+principles in PyTorch. No HuggingFace `Trainer`, no pretrained weight.
 
 Target hardware: 4x RTX 6000 Ada (48GB), PCIe, no NVLink.
 

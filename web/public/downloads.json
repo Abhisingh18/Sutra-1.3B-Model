@@ -271,5 +271,18 @@
    "last_30d": 47,
    "likes": 0
   }
+ },
+ {
+  "date": "2026-09-13",
+  "model": {
+   "all_time": 1716,
+   "last_30d": 1716,
+   "likes": 1
+  },
+  "dataset": {
+   "all_time": 47,
+   "last_30d": 47,
+   "likes": 0
+  }
  }
 ]

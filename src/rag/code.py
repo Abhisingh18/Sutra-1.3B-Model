@@ -16,6 +16,7 @@ untrusted: separate process, no network, hard timeout, output truncated, and
 killed by process group so a fork cannot outlive it.
 """
 
+import ast
 import os
 import re
 import subprocess
@@ -27,9 +28,39 @@ _FENCE = re.compile(r"```(?:python|py)?\s*\n(.*?)```", re.S)
 # Where unfenced code starts. This model mostly does not fence its output --
 # it emits "def reverse_string(s):" straight into the prose -- so requiring
 # fences meant the check never ran on the replies that needed it most.
+#
+# Block openers must end in a colon: prose starts lines with "for example," and
+# "if you want", and a looser pattern handed those paragraphs to the
+# interpreter, which reported "unterminated string literal" at the first
+# "That's" -- a verdict on English, shown under the reply as broken code.
 _CODE_START = re.compile(
-    r"^\s*(?:def |class |import |from \w+ import|print\(|for |while |if |@)",
+    r"^[ \t]*(?:def \w+\s*\(|class \w|import \w|from [\w.]+ import |print\(|"
+    r"(?:for|while|if|with)\b.*:[ \t]*(?:#.*)?$|@\w)",
     re.M)
+
+_WORD = re.compile(r"^[A-Za-z][A-Za-z'\u2019\-]*[,.;:!?]?$")
+
+
+def _is_prose(line):
+    """A top-level line of English: it does not parse, and it reads as words.
+
+    Indented lines are never prose -- they belong to a block, and a broken one
+    is exactly what the check exists to report. Nor is anything containing =
+    or a double quote, which sentences rarely have and broken code usually does.
+    """
+    s = line.strip()
+    if not s or line[:1] in (" ", "\t") or s.startswith(("#", "@")):
+        return False
+    if "=" in s or '"' in s:
+        return False
+    try:
+        ast.parse(s + "\n    pass" if s.endswith(":") else s)
+        return False
+    except SyntaxError:
+        pass
+    words = s.split()
+    return (len(words) >= 2
+            and sum(bool(_WORD.match(w)) for w in words) >= 0.7 * len(words))
 
 TIMEOUT = 8
 MAX_OUTPUT = 2000
@@ -53,15 +84,25 @@ def extract_code(text):
         code = blocks[-1].strip()
         return code or None
 
-    # Unfenced: take everything from the first line that opens a statement.
-    # Trailing prose is left in deliberately rather than guessed at -- if it
-    # is really prose the snippet fails to parse, and "SyntaxError" is the
-    # honest verdict on a reply that mixed the two.
-    m = _CODE_START.search(text)
-    if not m:
-        return None
-    code = text[m.start():].strip()
-    return code if len(code.splitlines()) >= 2 else None
+    # Unfenced: from the first line that opens a statement up to the first line
+    # of English after it. This used to run to the end of the reply, on the
+    # theory that trailing prose failing to parse was an honest verdict. It was
+    # not: correct code followed by "It's that simple." was reported as code
+    # that does not run, and a reader cannot tell that apart from the model's
+    # real mistakes, which are common enough without help.
+    lines = text.splitlines()
+    for m in _CODE_START.finditer(text):
+        start = text.count("\n", 0, m.start())
+        if _is_prose(lines[start]):
+            continue
+        body = []
+        for line in lines[start:]:
+            if _is_prose(line):
+                break
+            body.append(line)
+        code = "\n".join(body).strip()
+        return code if len(code.splitlines()) >= 2 else None
+    return None
 
 
 def run(code, stdin=""):

@@ -98,6 +98,7 @@ start_server() {
 TUNNEL_BACKOFF=0
 TUNNEL_QUICK=0
 NEXT_TUNNEL_AT=0
+TUNNEL_STARTED_AT=0
 
 start_tunnel() {
   [ "$(date +%s)" -lt "$NEXT_TUNNEL_AT" ] && return
@@ -124,6 +125,7 @@ start_tunnel() {
   if [ -n "${URL:-}" ]; then
     TUNNEL_BACKOFF=0
     TUNNEL_QUICK=0
+    TUNNEL_STARTED_AT=$(date +%s)
     echo "$URL" >"$ROOT/deploy/tunnel_url.txt"
     say "tunnel URL: $URL"
     # Publish it so the site picks the new address up on its own. Without this
@@ -220,11 +222,17 @@ while true; do
   # live process and a hostname that resolves to nothing -- which looks
   # identical to "model offline" from the browser.
   PUBLIC=$(cat "$ROOT/deploy/tunnel_url.txt" 2>/dev/null || true)
-  if [ -n "$PUBLIC" ] && kill -0 "${TUNNEL_PID:-0}" 2>/dev/null; then
+  # A new quick tunnel reports its hostname before it serves anything, and on
+  # 2026-09-15 it took longer than the two checks ten seconds apart that used
+  # to follow: every fresh tunnel was declared unreachable and replaced within
+  # 10s, and each replacement asked Cloudflare for yet another. So a tunnel gets
+  # two minutes before its failures count, and three of them to be restarted.
+  if [ -n "$PUBLIC" ] && kill -0 "${TUNNEL_PID:-0}" 2>/dev/null \
+     && [ $(( $(date +%s) - TUNNEL_STARTED_AT )) -ge 120 ]; then
     if ! curl -fsS -m 20 "$PUBLIC/health" >/dev/null 2>&1; then
       TFAILS=$((TFAILS + 1))
-      say "tunnel unreachable at $PUBLIC ($TFAILS/2)"
-      if [ "$TFAILS" -ge 2 ]; then
+      say "tunnel unreachable at $PUBLIC ($TFAILS/3)"
+      if [ "$TFAILS" -ge 3 ]; then
         say "restarting tunnel"
         kill "${TUNNEL_PID:-0}" 2>/dev/null
         sleep 3

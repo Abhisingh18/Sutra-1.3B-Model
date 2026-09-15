@@ -96,6 +96,7 @@ start_server() {
 # and retrying every two minutes kept the block in place. Failures now back
 # off, doubling from 5 minutes to at most 30.
 TUNNEL_BACKOFF=0
+TUNNEL_QUICK=0
 NEXT_TUNNEL_AT=0
 
 start_tunnel() {
@@ -122,6 +123,7 @@ start_tunnel() {
 
   if [ -n "${URL:-}" ]; then
     TUNNEL_BACKOFF=0
+    TUNNEL_QUICK=0
     echo "$URL" >"$ROOT/deploy/tunnel_url.txt"
     say "tunnel URL: $URL"
     # Publish it so the site picks the new address up on its own. Without this
@@ -129,10 +131,23 @@ start_tunnel() {
     # end up pointing at a dead hostname.
     bash "$ROOT/deploy/publish_url.sh" "$URL" 2>&1 | tee -a "$LOG"
   else
-    TUNNEL_BACKOFF=$(( TUNNEL_BACKOFF ? TUNNEL_BACKOFF * 2 : 300 ))
-    [ "$TUNNEL_BACKOFF" -gt 1800 ] && TUNNEL_BACKOFF=1800
-    NEXT_TUNNEL_AT=$(( $(date +%s) + TUNNEL_BACKOFF ))
-    say "tunnel did not report a URL ($(tail -1 "$ROOT/logs_tunnel.txt" | cut -c1-100)); next try in ${TUNNEL_BACKOFF}s"
+    # A 429 means Cloudflare is rate limiting this IP, and only waiting helps.
+    # Anything else is worth retrying within a minute, a few times, before the
+    # long wait: later on 2026-09-15 the quick-tunnel API timed out on two of
+    # every three requests, and a 20-minute backoff after each one kept the
+    # site offline while the next attempt would likely have worked.
+    WAIT=60
+    if grep -qE "status 429|error code: 1015" "$ROOT/logs_tunnel.txt" \
+       || [ "$TUNNEL_QUICK" -ge 6 ]; then
+      TUNNEL_BACKOFF=$(( TUNNEL_BACKOFF ? TUNNEL_BACKOFF * 2 : 300 ))
+      [ "$TUNNEL_BACKOFF" -gt 1800 ] && TUNNEL_BACKOFF=1800
+      WAIT=$TUNNEL_BACKOFF
+      TUNNEL_QUICK=0
+    else
+      TUNNEL_QUICK=$((TUNNEL_QUICK + 1))
+    fi
+    NEXT_TUNNEL_AT=$(( $(date +%s) + WAIT ))
+    say "tunnel did not report a URL ($(tail -1 "$ROOT/logs_tunnel.txt" | cut -c1-100)); next try in ${WAIT}s"
     kill "$TUNNEL_PID" 2>/dev/null
   fi
 }

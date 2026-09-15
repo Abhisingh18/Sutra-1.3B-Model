@@ -23,7 +23,7 @@ LOG="$ROOT/logs_serve.txt"
 # 46 GB job and every restart then died on OOM, so override it when the box is
 # busy rather than letting the supervisor loop.
 export CUDA_DEVICE_ORDER=PCI_BUS_ID
-export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-2}"
+export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-10}"
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 
 # Search key, kept outside the repo. Its absence is not an error -- the server
@@ -81,9 +81,13 @@ start_tunnel() {
     >>"$ROOT/logs_tunnel.txt" 2>&1 &
   TUNNEL_PID=$!
 
-  # The hostname only appears once the tunnel is registered.
+  # The hostname only appears once the tunnel is registered. Require a hyphen:
+  # quick-tunnel names are always word-word-word, and when Cloudflare is
+  # unreachable cloudflared's own error text names https://api.trycloudflare.com,
+  # which the looser pattern took for the tunnel -- 467 times on 2026-09-13,
+  # publishing a hostname that was never ours.
   for _ in $(seq 1 40); do
-    URL=$(grep -oE 'https://[a-z0-9-]+\.trycloudflare\.com' \
+    URL=$(grep -oE 'https://[a-z0-9]+(-[a-z0-9]+)+\.trycloudflare\.com' \
       "$ROOT/logs_tunnel.txt" | head -1)
     [ -n "${URL:-}" ] && break
     sleep 3

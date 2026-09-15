@@ -61,8 +61,9 @@ export default function Home() {
   // retrieved passage is not a guarantee either, but it puts the real text on
   // screen under the reply, which nothing else here does.
   const [canWeb, setCanWeb] = useState(false);
-  // Off by default: the user turns search on for the questions that need it.
-  const [web, setWeb] = useState(false);
+  // Always on: every reply is looked up on the web first, and the badge
+  // cannot be unticked.
+  const web = true;
   const [doc, setDoc] = useState<{ id: string; name: string; chunks: number } | null>(null);
   const [uploading, setUploading] = useState(false);
   const [navOpen, setNavOpen] = useState(false);
@@ -523,7 +524,6 @@ export default function Home() {
             {canWeb && !doc && (
               <button
                 className={`tool ${web ? "on" : ""}`}
-                onClick={() => setWeb(!web)}
                 title="Look the answer up on the web before replying"
               >
                 {web ? "✓ " : ""}Search the web

@@ -22,6 +22,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import textwrap
 
 _FENCE = re.compile(r"```(?:python|py)?\s*\n(.*?)```", re.S)
 
@@ -81,7 +82,11 @@ def extract_code(text):
     """
     blocks = _FENCE.findall(text)
     if blocks:
-        code = blocks[-1].strip()
+        # Dedent before stripping: the model nests fences inside numbered
+        # lists, four spaces deep, and strip() alone took the indent off the
+        # first line only -- every such block then "failed" with
+        # IndentationError, a fault of the extraction rather than the code.
+        code = textwrap.dedent(blocks[-1]).strip("\n").rstrip()
         return code or None
 
     # Unfenced: from the first line that opens a statement up to the first line
@@ -100,7 +105,7 @@ def extract_code(text):
             if _is_prose(line):
                 break
             body.append(line)
-        code = "\n".join(body).strip()
+        code = textwrap.dedent("\n".join(body)).strip("\n").rstrip()
         return code if len(code.splitlines()) >= 2 else None
     return None
 

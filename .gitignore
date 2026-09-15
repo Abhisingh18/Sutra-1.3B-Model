@@ -41,3 +41,4 @@ logs_*.txt
 
 # Search API key read by deploy/serve.sh; never in the repo
 .sutra_tavily_key
+logs_serve.lock

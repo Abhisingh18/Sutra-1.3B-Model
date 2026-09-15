@@ -18,6 +18,16 @@ CLOUDFLARED="${CLOUDFLARED:-$ROOT/deploy/cloudflared}"
 PORT="${PORT:-8000}"
 LOG="$ROOT/logs_serve.txt"
 
+# One supervisor at a time. On 2026-09-15 the user's systemd manager died and
+# this was started by hand; sutra.service would start a second copy the moment
+# the manager came back, and two supervisors fight over the port and ask
+# Cloudflare for two tunnels. A later copy waits here as a standby instead.
+exec 9>"$ROOT/logs_serve.lock"
+if ! flock -n 9; then
+  echo "[$(date '+%F %T')] another serve.sh holds the lock; waiting" >>"$LOG"
+  flock 9
+fi
+
 # PCI_BUS_ID is required or the indices do not mean what nvidia-smi says they
 # mean. The card is a default, not a fixture: 8 filled up with someone else's
 # 46 GB job and every restart then died on OOM, so override it when the box is
@@ -42,19 +52,26 @@ start_server() {
   # Claim the port first. Without this an orphan from an earlier run keeps
   # holding it, every new server exits with EADDRINUSE, and the supervisor
   # restarts it forever while the health check passes against the orphan.
+  #
+  # Bounded, because fuser stats every open file on the machine: on 2026-09-15
+  # a hung NFS mount left it in D state for minutes, and the supervisor waited
+  # on it with no server running. The wait is killable, so a timeout works.
   if command -v fuser >/dev/null 2>&1; then
-    fuser -k "$PORT/tcp" >/dev/null 2>&1 || true
+    timeout -s KILL 15 fuser -k "$PORT/tcp" >/dev/null 2>&1 || true
   else
     pkill -f "deploy.server --port $PORT" 2>/dev/null || true
   fi
   sleep 2
 
   say "starting model server on :$PORT"
-  # The Wikipedia index rides along only when it exists on disk. With the
-  # relevance gate it costs nothing to have on: measured over the probe set it
-  # answers 7 of 16 from a cited passage and hands over a wrong one 0 times.
+  # The Wikipedia index is opt-in (SUTRA_RAG=1). The site never sends rag, so
+  # the index only cost memory: ~20 GB of RAM and a multi-minute JSON parse on
+  # every start. On 2026-09-15, with the machine's swap full, that load pushed
+  # this unit past systemd-oomd's pressure limit and it was killed 26 times in
+  # an hour. Upload and quotes work without it.
   RAG_FLAG=""
-  [ -d "$ROOT/rag_index_v4" ] && RAG_FLAG="--rag-index $ROOT/rag_index_v4"
+  [ "${SUTRA_RAG:-0}" = 1 ] && [ -d "$ROOT/rag_index_v4" ] \
+    && RAG_FLAG="--rag-index $ROOT/rag_index_v4"
 
   "$PY" -m deploy.server --port "$PORT" $WEB_FLAG $RAG_FLAG \
     >>"$ROOT/logs_server.txt" 2>&1 &
@@ -74,7 +91,15 @@ start_server() {
   GIVE_UP_AT=$(( $(date +%s) + 900 ))
 }
 
+# Quick tunnels are rate limited per IP. On 2026-09-15 the oomd kill loop asked
+# for 30+ in an hour, Cloudflare answered every new one with 429 (error 1015),
+# and retrying every two minutes kept the block in place. Failures now back
+# off, doubling from 5 minutes to at most 30.
+TUNNEL_BACKOFF=0
+NEXT_TUNNEL_AT=0
+
 start_tunnel() {
+  [ "$(date +%s)" -lt "$NEXT_TUNNEL_AT" ] && return
   say "starting tunnel"
   : >"$ROOT/logs_tunnel.txt"
   "$CLOUDFLARED" tunnel --url "http://localhost:$PORT" \
@@ -90,10 +115,13 @@ start_tunnel() {
     URL=$(grep -oE 'https://[a-z0-9]+(-[a-z0-9]+)+\.trycloudflare\.com' \
       "$ROOT/logs_tunnel.txt" | head -1)
     [ -n "${URL:-}" ] && break
+    # Exited without a hostname (a 429, say): waiting longer finds nothing.
+    kill -0 "$TUNNEL_PID" 2>/dev/null || break
     sleep 3
   done
 
   if [ -n "${URL:-}" ]; then
+    TUNNEL_BACKOFF=0
     echo "$URL" >"$ROOT/deploy/tunnel_url.txt"
     say "tunnel URL: $URL"
     # Publish it so the site picks the new address up on its own. Without this
@@ -101,7 +129,11 @@ start_tunnel() {
     # end up pointing at a dead hostname.
     bash "$ROOT/deploy/publish_url.sh" "$URL" 2>&1 | tee -a "$LOG"
   else
-    say "tunnel did not report a URL; will retry"
+    TUNNEL_BACKOFF=$(( TUNNEL_BACKOFF ? TUNNEL_BACKOFF * 2 : 300 ))
+    [ "$TUNNEL_BACKOFF" -gt 1800 ] && TUNNEL_BACKOFF=1800
+    NEXT_TUNNEL_AT=$(( $(date +%s) + TUNNEL_BACKOFF ))
+    say "tunnel did not report a URL ($(tail -1 "$ROOT/logs_tunnel.txt" | cut -c1-100)); next try in ${TUNNEL_BACKOFF}s"
+    kill "$TUNNEL_PID" 2>/dev/null
   fi
 }
 
@@ -135,7 +167,8 @@ while true; do
     FAILS=0
   fi
 
-  if ! kill -0 "${TUNNEL_PID:-0}" 2>/dev/null; then
+  if ! kill -0 "${TUNNEL_PID:-0}" 2>/dev/null \
+     && [ "$(date +%s)" -ge "$NEXT_TUNNEL_AT" ]; then
     say "tunnel died, restarting"
     start_tunnel
   fi
@@ -172,7 +205,7 @@ while true; do
   # live process and a hostname that resolves to nothing -- which looks
   # identical to "model offline" from the browser.
   PUBLIC=$(cat "$ROOT/deploy/tunnel_url.txt" 2>/dev/null || true)
-  if [ -n "$PUBLIC" ]; then
+  if [ -n "$PUBLIC" ] && kill -0 "${TUNNEL_PID:-0}" 2>/dev/null; then
     if ! curl -fsS -m 20 "$PUBLIC/health" >/dev/null 2>&1; then
       TFAILS=$((TFAILS + 1))
       say "tunnel unreachable at $PUBLIC ($TFAILS/2)"

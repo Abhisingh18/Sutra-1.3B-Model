@@ -50,7 +50,8 @@ class ChatRequest(BaseModel):
     max_tokens: int = 512
     temperature: float = 0.5
     rag: bool = False
-    web: bool = False
+    # No `web` field: search runs on every message whenever the server has a
+    # key. Older pages still send `web`, and pydantic ignores unknown fields.
     doc_id: str | None = None
 
 
@@ -103,8 +104,9 @@ def generate_tokens(req: ChatRequest):
         if hits:
             question = build_prompt(req.message, hits, max_chars=2600)
             used = hits
-    elif req.web and STATE.get("web") is not None:
-        # Live search, for anything the Wikipedia snapshot predates.
+    elif STATE.get("web") is not None:
+        # Live search on every message, for anything the Wikipedia snapshot
+        # predates. The site dropped its toggle, so a request cannot opt out.
         hits = STATE["web"].search(req.message, k=4)
         if hits:
             question = build_prompt(req.message, hits, max_chars=2600)

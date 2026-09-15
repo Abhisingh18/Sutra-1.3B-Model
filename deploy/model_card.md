@@ -22,6 +22,15 @@ tags:
 
 # Sutra-1.3B
 
+<!-- The counter above this card is fixed to a rolling 30 days and cannot be
+     switched. This one reads downloadsAllTime from the Hub API on every page
+     load, so the two together show both the recent rate and the total since
+     launch. -->
+[![downloads since launch](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fhuggingface.co%2Fapi%2Fmodels%2FAbhisingh-18%2FSutra-1.3B-Chat%3Fexpand%255B%255D%3DdownloadsAllTime&query=%24.downloadsAllTime&label=downloads%20since%20launch&color=1f6feb&style=flat-square)](https://huggingface.co/Abhisingh-18/Sutra-1.3B-Chat)
+[![model size](https://img.shields.io/badge/params-1.32B%20total%20%2F%200.28B%20active-6e7681?style=flat-square)](#architecture)
+[![trained from scratch](https://img.shields.io/badge/trained-from%20scratch%2C%2018B%20tokens-2f6b46?style=flat-square)](#training)
+
+
 A 1.32B-parameter **Mixture-of-Experts** language model **pretrained from
 scratch** in pure PyTorch, with **Multi-head Latent Attention (MLA)** and
 DeepSeek-style **auxiliary-loss-free expert routing** — implemented from the

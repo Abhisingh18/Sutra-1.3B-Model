@@ -21,12 +21,13 @@ import json
 import os
 
 import torch
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, Header, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from src.model.loader import load_checkpoint, describe
+from src.rag import apikeys
 from src.tokenizer.special_tokens import chat_template, END_TURN
 
 SYSTEM = "You are a helpful assistant. Answer the question directly and clearly."
@@ -203,8 +204,7 @@ def generate_tokens(req: ChatRequest):
             yield {"code": verdict}
 
 
-@app.post("/chat")
-async def chat(req: ChatRequest):
+async def _stream_chat(req: ChatRequest):
     async def stream():
         loop = asyncio.get_event_loop()
         gen = generate_tokens(req)
@@ -219,6 +219,52 @@ async def chat(req: ChatRequest):
         yield f"data: {json.dumps({'done': True})}\n\n"
 
     return StreamingResponse(stream(), media_type="text/event-stream")
+
+
+@app.post("/chat")
+async def chat(req: ChatRequest):
+    # No key required: this is what the Vercel chat page calls. It carries no
+    # separate quota of its own, so it competes with everyone else for the one
+    # GPU exactly as it always has -- the API layer below is additive, not a
+    # replacement.
+    return await _stream_chat(req)
+
+
+# ---------------------------------------------------------------------------
+# Public API: self-serve keys, so anyone can call the model programmatically
+# rather than only through the chat page. See src/rag/apikeys.py for the
+# limits and why both a per-IP and a per-key cap exist.
+# ---------------------------------------------------------------------------
+
+@app.post("/v1/keys")
+def create_key(request: Request):
+    ip = request.client.host if request.client else "unknown"
+    key, error = apikeys.create_key(ip)
+    if error:
+        raise HTTPException(429, error)
+    return {"api_key": key,
+            "note": "Save this now -- it is shown only once and cannot be "
+                    "recovered. Send it as 'Authorization: Bearer <key>'.",
+            "daily_limit": apikeys.DAILY_REQUESTS_PER_KEY}
+
+
+@app.get("/v1/usage")
+def key_usage(authorization: str | None = Header(default=None)):
+    key = (authorization or "").removeprefix("Bearer ").strip()
+    u = apikeys.usage(key)
+    if u is None:
+        raise HTTPException(401, "invalid API key")
+    return u
+
+
+@app.post("/v1/chat")
+async def api_chat(req: ChatRequest,
+                   authorization: str | None = Header(default=None)):
+    key = (authorization or "").removeprefix("Bearer ").strip()
+    ok, error = apikeys.check_and_spend(key)
+    if not ok:
+        raise HTTPException(401 if "invalid" in error else 429, error)
+    return await _stream_chat(req)
 
 
 def main():

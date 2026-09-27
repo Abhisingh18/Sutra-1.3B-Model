@@ -1,0 +1,748 @@
+<title>Sutra Reel</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0b0a08;
+    --stage: #100e0a;
+    --glow-a: #3a2a10;
+    --glow-b: #10201e;
+    --ink: #f4efe4;
+    --ink-dim: #c9c2b2;
+    --slate: #837c6d;
+    --line: rgba(244, 239, 228, 0.11);
+    --line-strong: rgba(244, 239, 228, 0.22);
+    --thread: #e3a337;
+    --thread-soft: #8a6224;
+    --thread-glow: rgba(227, 163, 55, 0.55);
+    --teal: #5fa8a0;
+    --teal-dim: #35544f;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    height: 100%;
+    overflow: hidden;
+  }
+  html { height: 100%; }
+
+  .mono {
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------------------------------------------------------------- frame */
+  .frame {
+    position: relative;
+    height: 100%;
+    min-height: 480px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: max(18px, env(safe-area-inset-top, 0px)) 16px max(18px, env(safe-area-inset-bottom, 0px));
+    isolation: isolate;
+  }
+  .frame::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 45% at 22% 20%, var(--glow-a), transparent 70%),
+      radial-gradient(ellipse 55% 40% at 82% 85%, var(--glow-b), transparent 70%),
+      var(--bg);
+    opacity: 0.9;
+    z-index: -1;
+    animation: drift 22s ease-in-out infinite alternate;
+  }
+  @keyframes drift {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to   { transform: translate3d(-1.5%, 1.5%, 0) scale(1.04); }
+  }
+  .reduced-motion .frame::before { animation: none; }
+
+  .stage {
+    position: relative;
+    width: min(920px, 100%);
+    aspect-ratio: 16 / 10;
+    max-height: 100%;
+    background: linear-gradient(180deg, var(--stage), #0b0a08 88%);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.75);
+    display: flex;
+    flex-direction: column;
+  }
+  @media (max-height: 560px), (max-width: 480px) {
+    .stage { aspect-ratio: 4 / 5; border-radius: 12px; }
+  }
+
+  .screen {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* ---------------------------------------------------------- fx overlays */
+  .flash {
+    position: absolute; inset: 0;
+    background: var(--thread);
+    opacity: 0;
+    pointer-events: none;
+    mix-blend-mode: screen;
+    z-index: 50;
+  }
+  .scanlines {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 5;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(244, 239, 228, 0.06) 0px,
+      rgba(244, 239, 228, 0.06) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  }
+  .spark {
+    position: absolute;
+    width: 4px; height: 4px;
+    margin: -2px 0 0 -2px;
+    border-radius: 50%;
+    background: var(--thread);
+    box-shadow: 0 0 8px 2px var(--thread-glow);
+    pointer-events: none;
+    z-index: 20;
+  }
+
+  /* --------------------------------------------------------------- scenes */
+  .scene {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(14px, 3vh, 28px);
+    padding: clamp(20px, 4vw, 56px);
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    z-index: 1;
+  }
+
+  .eyebrow {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--thread);
+    opacity: 0;
+  }
+
+  .display {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 500;
+    line-height: 1.02;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  /* ------------------------------------------------------------ scene: hook */
+  .s-hook .seed {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--thread);
+    box-shadow: 0 0 14px 4px var(--thread-glow);
+    opacity: 0;
+  }
+  .s-hook svg.wave { width: min(70vw, 420px); height: 40px; overflow: visible; }
+  .s-hook svg.wave path {
+    fill: none; stroke-linecap: round;
+    stroke-dasharray: 100; stroke-dashoffset: 100;
+  }
+  .s-hook svg.wave .trail { stroke: var(--thread-soft); stroke-width: 1.4; opacity: 0.55; }
+  .s-hook svg.wave .comet {
+    stroke: var(--ink); stroke-width: 2.2; stroke-dasharray: 6 94;
+    filter: drop-shadow(0 0 6px var(--thread-glow));
+  }
+
+  .s-hook .deva {
+    font-family: "Fraunces", serif;
+    font-style: italic;
+    font-size: clamp(13px, 2vw, 16px);
+    color: var(--ink-dim);
+    opacity: 0;
+  }
+
+  .s-hook .word { display: flex; gap: 0.02em; }
+  .s-hook .word span {
+    display: inline-block;
+    font-size: clamp(46px, 11vw, 96px);
+    opacity: 0;
+    transform: translateY(18px) scale(0.6);
+  }
+  .s-hook .claim {
+    color: var(--ink-dim);
+    font-size: clamp(14px, 2.4vw, 18px);
+    max-width: 30em;
+    opacity: 0;
+  }
+  .s-hook .claim b { color: var(--ink); font-weight: 600; }
+
+  /* ----------------------------------------------------------- scene: scale */
+  .s-scale .numrow {
+    display: flex; gap: clamp(24px, 6vw, 72px); flex-wrap: wrap; justify-content: center;
+  }
+  .s-scale .numcard { display: flex; flex-direction: column; gap: 6px; opacity: 0; transform: scale(0.7); }
+  .s-scale .num { font-family: "Fraunces", serif; font-weight: 500; font-size: clamp(38px, 8vw, 68px); }
+  .s-scale .num.active { color: var(--thread); }
+  .s-scale .lbl { font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--slate); }
+
+  .s-scale .grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 5px;
+    width: min(60vw, 260px);
+  }
+  .s-scale .grid i {
+    display: block; aspect-ratio: 1; border-radius: 2px;
+    background: var(--line-strong);
+    transform: scale(0.5); opacity: 0;
+  }
+  .s-scale .ratio { opacity: 0; transform: scale(0.7); margin-top: -6px; }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--line-strong); border-radius: 999px;
+    padding: 6px 14px; font-size: 13px; color: var(--ink-dim);
+  }
+  .chip b { color: var(--thread); font-weight: 500; }
+
+  /* ------------------------------------------------------------- scene: arch */
+  .s-arch .display { font-size: clamp(20px, 3.4vw, 28px); opacity: 0; }
+  .s-arch .archwrap {
+    display: flex; gap: clamp(24px, 5vw, 60px); align-items: center; flex-wrap: wrap; justify-content: center;
+  }
+  .s-arch .cachecol { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .s-arch .bars { display: flex; align-items: flex-end; gap: 22px; height: 130px; }
+  .s-arch .bar { width: 34px; border-radius: 6px 6px 2px 2px; background: var(--line-strong); position: relative; height: 0%; }
+  .s-arch .bar span {
+    position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+    font-size: 11px; color: var(--slate); white-space: nowrap; margin-bottom: 6px; opacity: 0;
+  }
+  .s-arch .bar.small { background: var(--thread); box-shadow: 0 0 14px var(--thread-glow); }
+  .s-arch .cachelbl { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--slate); opacity: 0; }
+
+  .s-arch .moe { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; width: 154px; }
+  .s-arch .moe i { display: block; aspect-ratio: 1; border-radius: 3px; background: var(--line-strong); opacity: 0; transform: scale(0.6); }
+  .s-arch .moe i.shared { background: var(--teal-dim); }
+
+  .s-arch .ratiorow { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; opacity: 0; }
+  .s-arch .archcaption { color: var(--slate); font-size: 13px; opacity: 0; max-width: 34em; }
+
+  /* ----------------------------------------------------------- scene: forged */
+  .s-forged .display { font-size: clamp(22px, 4vw, 32px); opacity: 0; }
+  .s-forged .pipeline { position: relative; width: min(86vw, 640px); height: 90px; }
+  .s-forged .pipeline svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .s-forged .pipeline path { fill: none; stroke-dasharray: 100; stroke-dashoffset: 100; }
+  .s-forged .pipeline .trail { stroke: var(--thread-soft); stroke-width: 1.3; opacity: 0.5; }
+  .s-forged .pipeline .comet {
+    stroke: var(--ink); stroke-width: 2; stroke-dasharray: 5 95;
+    filter: drop-shadow(0 0 5px var(--thread-glow));
+  }
+  .s-forged .nodes { position: absolute; inset: 0; display: flex; justify-content: space-between; align-items: center; }
+  .s-forged .node { display: flex; flex-direction: column; align-items: center; gap: 8px; opacity: 0; transform: scale(0.5); }
+  .s-forged .node i {
+    width: 10px; height: 10px; border-radius: 50%; background: var(--thread);
+    box-shadow: 0 0 8px var(--thread-glow);
+  }
+  .s-forged .node b { font-size: 12px; font-weight: 500; }
+  .s-forged .node small { font-size: 10px; color: var(--slate); }
+  .s-forged .statrow { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; opacity: 0; }
+
+  /* ------------------------------------------------------------- scene: proof */
+  .s-proof .display { font-size: clamp(22px, 4vw, 32px); opacity: 0; }
+  .s-proof .benchlist { display: flex; flex-direction: column; gap: 22px; width: min(80vw, 480px); }
+  .s-proof .benchrow { display: flex; flex-direction: column; gap: 6px; }
+  .s-proof .benchtop { display: flex; justify-content: space-between; font-size: 13px; color: var(--ink-dim); }
+  .s-proof .benchtop b { color: var(--ink); font-family: "IBM Plex Mono", monospace; }
+  .s-proof .track { position: relative; height: 10px; border-radius: 5px; background: var(--line); overflow: visible; }
+  .s-proof .fill {
+    position: absolute; inset: 0; width: 0%; border-radius: 5px;
+    background: linear-gradient(90deg, var(--thread-soft), var(--thread));
+    box-shadow: 0 0 10px var(--thread-glow);
+  }
+  .s-proof .chance {
+    position: absolute; top: -3px; bottom: -3px; width: 2px;
+    background: var(--slate); opacity: 0.7;
+  }
+  .s-proof .chance::after {
+    content: "random"; position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+    font-size: 9px; color: var(--slate); white-space: nowrap;
+  }
+  .s-proof .honest { color: var(--slate); font-size: 12px; opacity: 0; max-width: 30em; }
+
+  /* --------------------------------------------------------------- scene: cta */
+  .s-cta .display { font-size: clamp(32px, 7vw, 54px); position: relative; display: inline-block; opacity: 0; transform: scale(0.7); }
+  .s-cta .underline {
+    display: block; height: 2px; width: 0%; margin: 6px auto 0;
+    background: var(--thread); box-shadow: 0 0 8px var(--thread-glow);
+  }
+  .s-cta .links { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; opacity: 0; }
+  .btn {
+    font-family: "IBM Plex Sans", sans-serif; font-size: 13px; font-weight: 500;
+    text-decoration: none; padding: 10px 18px; border-radius: 999px;
+    border: 1px solid var(--line-strong); color: var(--ink);
+    transition: border-color 0.2s ease, transform 0.2s ease;
+    display: inline-block; transform: scale(0.85); opacity: 0;
+  }
+  .btn:hover { border-color: var(--thread); transform: scale(1) translateY(-1px) !important; }
+  .btn.primary { background: var(--thread); border-color: var(--thread); color: #1a1206; font-weight: 600; }
+  .btn.primary:hover { background: #eeb452; }
+  .s-cta .fine { color: var(--slate); font-size: 12px; opacity: 0; }
+
+  /* ------------------------------------------------------------------ chrome */
+  .chrome {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px clamp(14px, 3vw, 22px);
+    border-top: 1px solid var(--line);
+    background: rgba(0,0,0,0.15);
+  }
+  .transport {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 1px solid var(--line-strong); background: transparent;
+    color: var(--ink); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex: none; padding: 0;
+  }
+  .transport:hover { border-color: var(--thread); }
+  .transport .play-ico { width: 0; height: 0; border-style: solid; border-width: 5px 0 5px 8px; border-color: transparent transparent transparent var(--ink); margin-left: 2px; }
+  .transport .pause-ico { display: flex; gap: 3px; }
+  .transport .pause-ico span { width: 3px; height: 11px; background: var(--ink); border-radius: 1px; }
+
+  .segments { flex: 1; display: flex; gap: 5px; min-width: 0; }
+  .segments .seg {
+    position: relative; flex: 1; height: 3px; border-radius: 2px;
+    background: var(--line-strong); overflow: hidden; cursor: pointer;
+  }
+  .segments .seg i {
+    position: absolute; inset: 0; background: var(--thread); transform-origin: left; transform: scaleX(0);
+  }
+
+  .replay {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 1px solid var(--line-strong); background: transparent; color: var(--ink);
+    cursor: pointer; flex: none; font-size: 14px; display: flex; align-items: center; justify-content: center;
+  }
+  .replay:hover { border-color: var(--thread); }
+
+  .credit {
+    position: fixed; bottom: 8px; left: 0; right: 0;
+    text-align: center; font-size: 10.5px; color: var(--slate);
+    letter-spacing: 0.04em; pointer-events: none;
+  }
+
+  @media (max-width: 480px) {
+    .s-arch .archwrap { gap: 20px; }
+    .btn { padding: 9px 14px; font-size: 12px; }
+  }
+</style>
+
+<div class="frame">
+  <div class="stage" id="stage">
+    <div class="screen" id="screen">
+      <div class="scanlines" id="scanlines"></div>
+
+      <section class="scene s-hook" data-scene="hook">
+        <div class="s-hook-inner" style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+          <div class="seed"></div>
+          <svg class="wave" viewBox="0 0 300 40" overflow="visible">
+            <path class="trail" pathLength="100" d="M2,30 C 50,10 90,34 140,18 S 220,4 298,20"/>
+            <path class="comet" pathLength="100" d="M2,30 C 50,10 90,34 140,18 S 220,4 298,20"/>
+          </svg>
+          <div class="deva">सूत्र &mdash; a thread, a formula</div>
+          <div class="word" aria-label="SUTRA">
+            <span>S</span><span>U</span><span>T</span><span>R</span><span>A</span>
+          </div>
+          <p class="claim">Built from nothing. <b>No pretrained weights. No fine-tune of someone else's model.</b> A 1.32B-parameter language model, trained solo.</p>
+        </div>
+      </section>
+
+      <section class="scene s-scale" data-scene="scale">
+        <div class="eyebrow">01 &mdash; Scale</div>
+        <div class="numrow">
+          <div class="numcard">
+            <span class="num mono" id="numTotal">0.00B</span>
+            <span class="lbl">Total parameters</span>
+          </div>
+          <div class="numcard">
+            <span class="num mono active" id="numActive">0.00B</span>
+            <span class="lbl">Active per token</span>
+          </div>
+        </div>
+        <div class="grid" id="scaleGrid"></div>
+        <div class="ratio"><span class="chip">Sparsity &nbsp;<b>4.7&times;</b></span></div>
+      </section>
+
+      <section class="scene s-arch" data-scene="arch">
+        <div class="eyebrow">02 &mdash; Architecture</div>
+        <div class="display">Multi-head Latent Attention</div>
+        <div class="archwrap">
+          <div class="cachecol">
+            <div class="bars">
+              <div class="bar big"><span>2,048</span></div>
+              <div class="bar small"><span style="color:var(--thread)">288</span></div>
+            </div>
+            <div class="cachelbl">Bytes cached / token</div>
+          </div>
+          <div class="cachecol">
+            <div class="moe" id="moeGrid"></div>
+            <div class="cachelbl">48 routed + 1 shared</div>
+          </div>
+        </div>
+        <div class="ratiorow">
+          <span class="chip">KV cache &nbsp;<b>7.1&times; smaller</b></span>
+          <span class="chip">Routing &nbsp;<b>top-4 of 48</b></span>
+        </div>
+        <p class="archcaption">Auxiliary-loss-free expert balancing, implemented from the papers &mdash; nothing borrowed off the shelf.</p>
+      </section>
+
+      <section class="scene s-forged" data-scene="forged">
+        <div class="eyebrow">03 &mdash; Forged</div>
+        <div class="display">Five stages, one pipeline</div>
+        <div class="pipeline">
+          <svg viewBox="0 0 640 4" preserveAspectRatio="none">
+            <path class="trail" pathLength="100" d="M0,2 L640,2"/>
+            <path class="comet" pathLength="100" d="M0,2 L640,2"/>
+          </svg>
+          <div class="nodes">
+            <div class="node" data-node="0"><i></i><b>Tokenizer</b><small>48K BPE</small></div>
+            <div class="node" data-node="1"><i></i><b>Data</b><small>18B tokens</small></div>
+            <div class="node" data-node="2"><i></i><b>Pretrain</b><small>4d 9h</small></div>
+            <div class="node" data-node="3"><i></i><b>SFT</b><small>18h</small></div>
+            <div class="node" data-node="4"><i></i><b>DPO</b><small>6h</small></div>
+          </div>
+        </div>
+        <div class="statrow">
+          <span class="chip mono">4&times; RTX 6000 Ada GPUs</span>
+          <span class="chip mono">18,000,000,000 tokens</span>
+        </div>
+      </section>
+
+      <section class="scene s-proof" data-scene="proof">
+        <div class="eyebrow">04 &mdash; Proof</div>
+        <div class="display">Measured, not claimed</div>
+        <div class="benchlist">
+          <div class="benchrow">
+            <div class="benchtop"><span>PIQA</span><b class="mono">65.6%</b></div>
+            <div class="track"><div class="fill f1"></div><div class="chance" style="left:50%"></div></div>
+          </div>
+          <div class="benchrow">
+            <div class="benchtop"><span>ARC-easy</span><b class="mono">45.0%</b></div>
+            <div class="track"><div class="fill f2"></div><div class="chance" style="left:25%"></div></div>
+          </div>
+        </div>
+        <p class="honest">WinoGrande still sits at chance. We're not hiding that &mdash; 0.28B active parameters don't buy pronoun-resolution reasoning yet.</p>
+      </section>
+
+      <section class="scene s-cta" data-scene="cta">
+        <span class="display">Talk to it.<span class="underline"></span></span>
+        <div class="links">
+          <a class="btn primary" href="https://sutra-1-3-b-model-15co.vercel.app/chat" target="_blank" rel="noopener">Open the chat</a>
+          <a class="btn" href="https://github.com/Abhisingh18/Sutra-1.3B-Model" target="_blank" rel="noopener">Read the code</a>
+          <a class="btn" href="https://huggingface.co/Abhisingh-18/Sutra-1.3B-Chat" target="_blank" rel="noopener">Get the weights</a>
+        </div>
+        <p class="fine">Free API. No signup to start.</p>
+      </section>
+
+      <div class="flash" id="flash"></div>
+    </div>
+
+    <div class="chrome">
+      <button class="transport" id="playBtn" aria-label="Pause"><span class="pause-ico"><span></span><span></span></span></button>
+      <div class="segments" id="segments"></div>
+      <button class="replay" id="replayBtn" aria-label="Replay">&#8635;</button>
+    </div>
+  </div>
+</div>
+<div class="credit">SUTRA-1.3B &middot; MIXTURE-OF-EXPERTS &middot; TRAINED FROM SCRATCH</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+(function () {
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced) document.documentElement.classList.add('reduced-motion');
+  var FX = !reduced;   // flash / shake / particle-burst gate; scene pacing stays identical either way
+
+  var screen = document.getElementById('screen');
+  var flashEl = document.getElementById('flash');
+  var scanlines = document.getElementById('scanlines');
+
+  // ---- build the sparsity grid (scale scene): 60 dots, 13 lit ~= 280/1319 --
+  var scaleGrid = document.getElementById('scaleGrid');
+  var LIT = [2, 7, 11, 16, 21, 25, 30, 34, 39, 43, 48, 52, 57];
+  var scaleDots = [], scaleLitDots = [];
+  for (var i = 0; i < 60; i++) {
+    var d = document.createElement('i');
+    var isLit = LIT.indexOf(i) !== -1;
+    if (isLit) { d.classList.add('lit'); scaleLitDots.push(d); } else { scaleDots.push(d); }
+    scaleGrid.appendChild(d);
+  }
+
+  // ---- build the MoE grid (arch scene): 49 cells, 4 routed + 1 shared ------
+  var moeGrid = document.getElementById('moeGrid');
+  var moeOn = [10, 17, 30, 38];
+  var moeBase = [], moeOnDots = [], moeShared = null;
+  for (var j = 0; j < 49; j++) {
+    var c = document.createElement('i');
+    if (j === 24) { c.classList.add('shared'); moeShared = c; }
+    if (j === 24 || moeOn.indexOf(j) !== -1) { moeOnDots.push(c); } else { moeBase.push(c); }
+    moeGrid.appendChild(c);
+  }
+
+  // ---- reusable fx helpers -------------------------------------------------
+  function flashCut() {
+    var t = gsap.timeline();
+    if (!FX) return t;
+    t.to(flashEl, { opacity: 0.55, duration: 0.05, ease: 'power1.in' })
+     .to(flashEl, { opacity: 0, duration: 0.3, ease: 'power2.out' });
+    return t;
+  }
+
+  function shake(amt) {
+    var t = gsap.timeline();
+    if (!FX) return t;
+    amt = amt || 5;
+    t.to(screen, { x: amt, duration: 0.045, ease: 'none' })
+     .to(screen, { x: -amt, duration: 0.09, ease: 'none' })
+     .to(screen, { x: amt * 0.5, duration: 0.07, ease: 'none' })
+     .to(screen, { x: 0, duration: 0.06, ease: 'none' });
+    return t;
+  }
+
+  function burst(xPct, yPct, color, count) {
+    var t = gsap.timeline();
+    if (!FX) return t;
+    count = count || 10;
+    var dots = [];
+    for (var k = 0; k < count; k++) {
+      var s = document.createElement('span');
+      s.className = 'spark';
+      s.style.left = xPct; s.style.top = yPct;
+      if (color) s.style.background = color;
+      screen.appendChild(s);
+      dots.push(s);
+    }
+    dots.forEach(function (s, idx) {
+      var ang = (Math.PI * 2 * idx / count) + 0.15;
+      var dist = 34 + (idx % 3) * 16;
+      t.fromTo(s,
+        { opacity: 1, x: 0, y: 0, scale: 1 },
+        { opacity: 0, x: Math.cos(ang) * dist, y: Math.sin(ang) * dist, scale: 0.2,
+          duration: 0.65, ease: 'power2.out' },
+        0);
+    });
+    t.call(function () { dots.forEach(function (s) { s.remove(); }); });
+    return t;
+  }
+
+  // Two paths sharing the same `d`, both pathLength=100: the faint one is the
+  // full-length "trail" dash, the bright short one is a 6-unit "comet" head.
+  // Animating both dashoffsets 100->0 in lockstep makes the comet appear to
+  // travel at the tip of the growing trail -- no motion-path plugin needed.
+  function drawThread(container, dur, ease) {
+    var trail = container.querySelector('.trail');
+    var comet = container.querySelector('.comet');
+    var t = gsap.timeline();
+    t.fromTo([trail, comet], { strokeDashoffset: 100 },
+      { strokeDashoffset: 0, duration: dur, ease: ease || 'power2.inOut' }, 0);
+    return t;
+  }
+
+  // ---------------------------------------------------------------- timeline
+  var tl = gsap.timeline({ paused: true });
+
+  // Cold open: a bright pulse resolving into the seed, rather than starting
+  // on a flat black frame.
+  if (FX) {
+    tl.set(flashEl, { opacity: 0.4 })
+      .to(flashEl, { opacity: 0, duration: 0.5, ease: 'power2.out' }, 0);
+  }
+
+  // ================================================================= HOOK
+  tl.addLabel('hook')
+    .set('.s-hook', { autoAlpha: 1 })
+    .fromTo('.s-hook .seed', { scale: 0.3, opacity: 0 },
+      { scale: 1, opacity: 1, duration: 0.35, ease: 'back.out(3)' }, 'hook+=0.1')
+    .add(drawThread(document.querySelector('.s-hook svg.wave'), 0.9), '-=0.05')
+    .to('.s-hook .deva', { opacity: 1, duration: 0.5 }, '-=0.5')
+    .to('.s-hook .word span', { opacity: 1, y: 0, scale: 1, duration: 0.42, ease: 'back.out(2.6)', stagger: 0.085 }, '+=0.05')
+    .call(function () { burst('50%', '46%', null, 12); shake(3); }, null, '-=0.05')
+    .to('.s-hook .claim', { opacity: 1, duration: 0.55 }, '-=0.1')
+    .to({}, { duration: 0.7 }) // hold beat
+    .add(flashCut())
+    .to('.s-hook', { autoAlpha: 0, duration: 0.001 }, '<')
+
+  // ================================================================ SCALE
+    .addLabel('scale')
+    .set('.s-scale', { autoAlpha: 1 })
+    .to('.s-scale .numcard:nth-child(1)', { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(2)' }, 'scale+=0.15')
+    .to({ v: 0 }, {
+      v: 1319, duration: 1.0, ease: 'power3.out',
+      onUpdate: function () { document.getElementById('numTotal').textContent = (this.targets()[0].v / 1000).toFixed(2) + 'B'; },
+      onComplete: function () { document.getElementById('numTotal').textContent = '1.32B'; },
+    }, '<')
+    .to('.s-scale .numcard:nth-child(2)', { opacity: 1, scale: 1, duration: 0.4, ease: 'back.out(2)' }, '-=0.55')
+    .to({ v: 0 }, {
+      v: 280, duration: 0.9, ease: 'power3.out',
+      onUpdate: function () { document.getElementById('numActive').textContent = (this.targets()[0].v / 1000).toFixed(2) + 'B'; },
+      onComplete: function () { document.getElementById('numActive').textContent = '0.28B'; },
+    }, '<')
+    .to(scaleDots, { opacity: 1, scale: 1, duration: 0.25, stagger: 0.008, ease: 'power1.out' }, '-=0.3')
+    .to(scaleLitDots, {
+      opacity: 1, scale: 1, duration: 0.3, stagger: 0.02, ease: 'back.out(2)',
+      onStart: function () { scaleLitDots.forEach(function (el2) { el2.style.background = 'var(--thread)'; el2.style.boxShadow = '0 0 8px var(--thread-glow)'; }); },
+    }, '-=0.5')
+    .to('.s-scale .ratio', { opacity: 1, scale: 1, duration: 0.35, ease: 'back.out(2.5)' }, '-=0.1')
+    .call(function () { shake(3); }, null, '<')
+    .to({}, { duration: 0.9 })
+    .add(flashCut())
+    .to('.s-scale', { autoAlpha: 0, duration: 0.001 }, '<')
+
+  // ================================================================= ARCH
+    .addLabel('arch')
+    .set('.s-arch', { autoAlpha: 1 })
+    .to('.s-arch .eyebrow', { opacity: 1, duration: 0.3 }, 'arch+=0.05')
+    .to('.s-arch .display', { opacity: 1, duration: 0.4 }, '-=0.1')
+    .to('.s-arch .bar.big', { height: '100%', duration: 0.7, ease: 'back.out(1.5)' }, '+=0.1')
+    .to('.s-arch .bar.small', { height: '14%', duration: 0.7, ease: 'back.out(1.5)' }, '<')
+    .to(['.s-arch .bar.big span', '.s-arch .bar.small span'], { opacity: 1, duration: 0.4 }, '-=0.3')
+    .to('.s-arch .cachelbl', { opacity: 1, duration: 0.4 }, '-=0.2')
+    .to(moeBase, { opacity: 0.5, scale: 1, duration: 0.3, stagger: 0.006 }, '-=0.4')
+    .to(moeOnDots, {
+      opacity: 1, scale: 1, duration: 0.35, stagger: 0.16, ease: 'back.out(2.5)',
+      onStart: function () { moeOnDots.forEach(function (el2) {
+        el2.style.background = el2.classList.contains('shared') ? 'var(--teal)' : 'var(--thread)';
+        el2.style.boxShadow = el2.classList.contains('shared') ? '0 0 10px rgba(95,168,160,.6)' : '0 0 10px var(--thread-glow)';
+      }); },
+    }, '-=0.2')
+    .call(function () { if (scanlines) gsap.to(scanlines, { opacity: 0.5, duration: 0.4 }); }, null, '-=0.6')
+    .to('.s-arch .ratiorow', { opacity: 1, duration: 0.4 }, '-=0.1')
+    .call(function () { shake(5); }, null, '<')
+    .to('.s-arch .archcaption', { opacity: 1, duration: 0.5 }, '+=0.3')
+    .to({}, { duration: 0.8 })
+    .call(function () { if (scanlines) gsap.to(scanlines, { opacity: 0, duration: 0.3 }); })
+    .add(flashCut(), '<')
+    .to('.s-arch', { autoAlpha: 0, duration: 0.001 }, '<')
+
+  // =============================================================== FORGED
+    .addLabel('forged')
+    .set('.s-forged', { autoAlpha: 1 })
+    .to('.s-forged .eyebrow', { opacity: 1, duration: 0.3 }, 'forged+=0.05')
+    .to('.s-forged .display', { opacity: 1, duration: 0.4 }, '-=0.1')
+    .addLabel('threadDraw', '+=0.1')
+    .add(drawThread(document.querySelector('.s-forged .pipeline'), 2.1, 'power1.inOut'), 'threadDraw')
+    .to('.s-forged .node[data-node="0"]', { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2.5)' }, 'threadDraw+=0.0')
+    .to('.s-forged .node[data-node="1"]', { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2.5)' }, 'threadDraw+=0.45')
+    .to('.s-forged .node[data-node="2"]', { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2.5)' }, 'threadDraw+=0.95')
+    .to('.s-forged .node[data-node="3"]', { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2.5)' }, 'threadDraw+=1.45')
+    .to('.s-forged .node[data-node="4"]', { opacity: 1, scale: 1, duration: 0.3, ease: 'back.out(2.5)' }, 'threadDraw+=1.95')
+    .call(function () { shake(3); }, null, 'threadDraw+=2.1')
+    .to('.s-forged .statrow', { opacity: 1, duration: 0.4 }, 'threadDraw+=2.15')
+    .to({}, { duration: 0.8 })
+    .add(flashCut())
+    .to('.s-forged', { autoAlpha: 0, duration: 0.001 }, '<')
+
+  // ================================================================= PROOF
+    .addLabel('proof')
+    .set('.s-proof', { autoAlpha: 1 })
+    .to('.s-proof .eyebrow', { opacity: 1, duration: 0.3 }, 'proof+=0.05')
+    .to('.s-proof .display', { opacity: 1, duration: 0.4 }, '-=0.1')
+    .addLabel('bars', '+=0.1')
+    .to('.s-proof .fill.f1', { width: '65.6%', duration: 0.9, ease: 'power2.out' }, 'bars')
+    .call(function () { shake(2); }, null, 'bars+=0.55')
+    .to('.s-proof .fill.f2', { width: '45.0%', duration: 0.9, ease: 'power2.out' }, 'bars+=1.0')
+    .call(function () { shake(2); }, null, 'bars+=1.55')
+    .to('.s-proof .honest', { opacity: 1, duration: 0.6 }, 'bars+=1.9')
+    .to({}, { duration: 1.0 })
+    .add(flashCut())
+    .to('.s-proof', { autoAlpha: 0, duration: 0.001 }, '<')
+
+  // =================================================================== CTA
+    .addLabel('cta')
+    .set('.s-cta', { autoAlpha: 1 })
+    .to('.s-cta .display', { opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(2.4)' }, 'cta+=0.1')
+    .call(function () { burst('50%', '38%', null, 16); shake(6); }, null, '-=0.1')
+    .to('.s-cta .underline', { width: '100%', duration: 0.6, ease: 'power2.out' }, '-=0.2')
+    .to('.s-cta .links .btn', { opacity: 1, scale: 1, duration: 0.35, stagger: 0.08, ease: 'back.out(2)' }, '-=0.1')
+    .to('.s-cta .fine', { opacity: 1, duration: 0.5 }, '-=0.1');
+
+  // ---- chapter progress bar, driven by the timeline's own labels ---------
+  var order = ['hook', 'scale', 'arch', 'forged', 'proof', 'cta'];
+  var segWrap = document.getElementById('segments');
+  var segs = order.map(function (name) {
+    var seg = document.createElement('div');
+    seg.className = 'seg';
+    var fill = document.createElement('i');
+    seg.appendChild(fill);
+    seg.addEventListener('click', function () { tl.seek(name, false); playing(true); });
+    segWrap.appendChild(seg);
+    return { fill: fill };
+  });
+
+  function segRange(idx) {
+    var start = tl.labels[order[idx]];
+    var end = (idx + 1 < order.length) ? tl.labels[order[idx + 1]] : tl.duration();
+    return [start, end];
+  }
+
+  gsap.ticker.add(function () {
+    var t = tl.time();
+    for (var k = 0; k < segs.length; k++) {
+      var r = segRange(k);
+      var frac = r[1] > r[0] ? (t - r[0]) / (r[1] - r[0]) : (t >= r[0] ? 1 : 0);
+      frac = Math.max(0, Math.min(1, frac));
+      segs[k].fill.style.transform = 'scaleX(' + frac + ')';
+    }
+  });
+
+  // ---- transport controls -------------------------------------------------
+  var playBtn = document.getElementById('playBtn');
+  function playing(shouldPlay) {
+    if (shouldPlay) { tl.play(); playBtn.innerHTML = '<span class="pause-ico"><span></span><span></span></span>'; playBtn.setAttribute('aria-label', 'Pause'); }
+    else { tl.pause(); playBtn.innerHTML = '<span class="play-ico"></span>'; playBtn.setAttribute('aria-label', 'Play'); }
+  }
+  var wasPausedByUser = false;
+  playBtn.addEventListener('click', function () {
+    playing(tl.paused());
+    wasPausedByUser = tl.paused();
+  });
+  document.getElementById('replayBtn').addEventListener('click', function () {
+    tl.seek(0, false);
+    playing(true);
+    wasPausedByUser = false;
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.code === 'Space') { e.preventDefault(); playing(tl.paused()); }
+    if (e.code === 'ArrowRight') { var n = Math.min(order.length - 1, order.indexOf(currentLabel()) + 1); tl.seek(order[n], false); playing(true); }
+    if (e.code === 'ArrowLeft') { var p = Math.max(0, order.indexOf(currentLabel()) - 1); tl.seek(order[p], false); playing(true); }
+  });
+  function currentLabel() {
+    var t = tl.time(), best = 'hook';
+    order.forEach(function (name) { if (tl.labels[name] <= t) best = name; });
+    return best;
+  }
+
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) tl.pause();
+    else if (!wasPausedByUser) tl.play();
+  });
+
+  tl.play();
+})();
+</script>

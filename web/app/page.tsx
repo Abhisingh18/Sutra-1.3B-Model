@@ -62,6 +62,10 @@ export default function Landing() {
             <a href="#results">Results</a>
             <a href="#pipeline">Pipeline</a>
             <Link href="/api/docs">API</Link>
+            {/* A static file under /public, not a route in this app -- a plain
+                anchor loads it as its own page instead of routing through
+                Next's client-side navigation. */}
+            <a href="/reel.html">Reel</a>
             <a href="https://github.com/Abhisingh18/Sutra-1.3B-Model">Code</a>
           </div>
           <div className="navcta">

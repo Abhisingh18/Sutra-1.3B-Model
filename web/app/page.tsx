@@ -61,6 +61,7 @@ export default function Landing() {
             <Link href="/architecture">Architecture</Link>
             <a href="#results">Results</a>
             <a href="#pipeline">Pipeline</a>
+            <Link href="/api/docs">API</Link>
             <a href="https://github.com/Abhisingh18/Sutra-1.3B-Model">Code</a>
           </div>
           <div className="navcta">

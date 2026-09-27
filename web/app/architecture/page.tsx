@@ -69,6 +69,7 @@ export default function Architecture() {
               Architecture
             </Link>
             <Link href="/#results">Results</Link>
+            <Link href="/api/docs">API</Link>
             <a href="https://github.com/Abhisingh18/Sutra-1.3B-Model">Code</a>
           </div>
           <div className="navcta">
@@ -363,7 +364,7 @@ export default function Architecture() {
         </section>
 
         {/* ------------------------------------------------ serving */}
-        <section className="docsec">
+        <section id="deployment" className="docsec">
           <span className="seclabel">Deployment</span>
           <h2>Getting it online, and keeping it there</h2>
           <p>

@@ -168,6 +168,21 @@ export default function Landing() {
         </div>
       </section>
 
+      <section className="platform wrap">
+        <h2>Watch it get built</h2>
+        <p className="lead">
+          A 30-second run through the numbers: scale, architecture, the
+          pipeline, and what the benchmarks actually say.
+        </p>
+        <div className="reelbox">
+          <iframe
+            src="/reel.html"
+            title="Sutra-1.3B launch reel"
+            loading="lazy"
+          />
+        </div>
+      </section>
+
       <section id="architecture" className="platform wrap">
         <h2>Mixture of Experts, with latent attention</h2>
         <p className="lead">

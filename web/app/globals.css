@@ -1185,6 +1185,28 @@ h1,
   line-height: 1.55;
 }
 
+/* The reel is a self-contained page (web/public/reel.html) running its own
+   GSAP timeline, embedded here rather than ported into React -- it autoplays
+   the moment the iframe loads, no extra script needed on this side. */
+.reelbox {
+  max-width: 960px;
+  margin: 40px auto 0;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  background: #0b0a08; /* the reel's own dark stage, so the box never flashes white while it loads */
+}
+.reelbox iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+@media (max-width: 640px) {
+  .reelbox { aspect-ratio: 4 / 5; border-radius: 14px; }
+}
+
 .cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

@@ -1,4 +1,4 @@
-# Sutra-1.3B — a 1.32B parameter MoE LLM trained from scratch
+# Sutra-1.3B — a 1.32B parameter MoE LLM trained from scratch..
 
 Pretraining, chat fine-tuning and preference alignment, written from first
 principles in PyTorch. No HuggingFace `Trainer`, no pretrained weight.
